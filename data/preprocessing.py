@@ -1,7 +1,7 @@
 import re
 import string
 
-def clean(text):
+def data_preprocessing(text):
 
     text = text.strip().lower()
     for p in string.punctuation:
