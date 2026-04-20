@@ -1,12 +1,14 @@
 from fastapi import FastAPI, HTTPException
 from api.schemas import PredictRequest, PredictResponse
 from api.predict import predict, load_model
+from data.preprocessing import data_preprocessing
+from utils import data
 
 app = FastAPI(title="Fake News Detector API", version="1.0.0")
 
 @app.on_event("startup")
 def startup_event():
-    load_model()
+    model = init_model()
 
 @app.get("/")
 def root():
