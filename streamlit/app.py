@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import os
 import random
+from newspaper import Article
 
 
 # params
@@ -18,9 +19,9 @@ predict_label = None
 predict_score = None
 predict_langue = None
 
-# API_URL = os.getenv("FASTAPI_URL", "http://localhost:8000")
+API_URL = os.getenv("FASTAPI_URL", "http://localhost:8000")
 
-API_READY = False #true quand c'est good
+API_READY = True #true quand c'est good
 
 st.set_page_config(
     page_title="Fake News Detector",
@@ -29,7 +30,30 @@ st.set_page_config(
 )
 
 # css pour real/fake
-    # a voir a la fin
+st.markdown("""
+<style>
+    .verdict-fake {
+        background-color: #ff4b4b22;
+        border: 1px solid #ff4b4b;
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #ff4b4b;
+    }
+    .verdict-real {
+        background-color: #21c35422;
+        border: 1px solid #21c354;
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #21c354;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # header
 st.title("📰 Fake News Detector 📰")
@@ -88,7 +112,6 @@ if analyze:
     if url_input:
         with st.spinner("Extraction en cours..."):
             try:
-                from newspaper import Article
                 art = Article(url_input)
                 art.download()
                 art.parse()
@@ -114,13 +137,58 @@ if analyze:
         st.stop()
 
     # prédiction
-    col_img, col_metrics = st.columns([1, 2])
-    with col_img:
-        st.image(random.choice(images), use_container_width=True)
-    with col_metrics:
-        st.metric("Verdict :", random.choice(["FAKE NEWS", "REAL NEWS"]))
-        st.metric("Indice de confiance :", f"{round(random.uniform(0.65, 0.98), 2):.0%}")
-        st.metric("Langue :", random.choice(["Français", "Anglais"]))
+    # col_img, col_metrics = st.columns([1, 2])
+    # with col_img:
+    #     st.image(random.choice(images), use_container_width=True)
+    # with col_metrics:
+    #     st.metric("Verdict :", random.choice(["FAKE NEWS", "REAL NEWS"]))
+    #     st.metric("Indice de confiance :", f"{round(random.uniform(0.65, 0.98), 2):.0%}")
+    #     st.metric("Langue :", random.choice(["Français", "Anglais"]))
+
+    with st.spinner("Analyse en cours..."):
+        if API_READY:
+            try:
+                response = requests.post(
+                    f"{API_URL}/predict",
+                    json={"text": text_to_analyze},
+                    timeout=10,
+                )
+                response.raise_for_status()
+                result = response.json()
+                predict_label  = result["label"]
+                predict_score  = result["score"]
+                predict_langue = result["lang"]
+            except requests.exceptions.ConnectionError:
+                st.error(f"❌ API non joignable sur {API_URL}")
+                st.stop()
+            except Exception as e:
+                st.error(f"❌ Erreur API : {e}")
+                st.stop()
+        else:
+            import time
+            time.sleep(1)
+            predict_label  = random.choice(["FAKE", "REAL"])
+            predict_score  = round(random.uniform(0.65, 0.98), 4)
+            predict_langue = "fr" if any(w in text_to_analyze.lower()
+                                         for w in ["le", "la", "les", "est", "un", "une"]) else "en"
+
+    # résultat
+    st.divider()
+    st.subheader("Résultat")
+
+    if predict_label == "FAKE":
+        st.markdown('<div class="verdict-fake">🚨 FAKE NEWS</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="verdict-real">✅ ARTICLE FIABLE</div>', unsafe_allow_html=True)
+
+    st.markdown("")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Verdict",             predict_label)
+    col2.metric("Indice de confiance", f"{predict_score:.1%}")
+    col3.metric("Langue",              "🇫🇷 Français" if predict_langue == "fr" else "🇬🇧 Anglais")
+
+    st.progress(predict_score, text=f"Score de confiance : {predict_score:.1%}")
+
 
 
 # feedback
