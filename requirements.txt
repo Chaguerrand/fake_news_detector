@@ -1,0 +1,17 @@
+pandas
+numpy
+langdetect
+
+
+
+
+fastapi
+uvicorn
+pydantic
+
+streamlit
+requests
+
+pytest
+
+kaggle
