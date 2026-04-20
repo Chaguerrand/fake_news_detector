@@ -1,12 +1,9 @@
 pandas
 numpy
 langdetect
-
-
-
+scikit-learn
 
 fastapi
-uvicorn
 pydantic
 
 streamlit
@@ -15,3 +12,14 @@ requests
 pytest
 
 kaggle
+
+beautifulsoup4
+joblib
+
+uvicorn[standard]
+
+newspaper3k
+lxml[html_clean]
+
+httpx
+python-dotenv
