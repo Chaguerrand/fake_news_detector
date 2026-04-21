@@ -142,8 +142,14 @@ if analyze:
                 )
                 response.raise_for_status()
                 result = response.json()
-                predict_label  = result["Verdict"]
-                predict_score  = result["Indice de confiance"]
+
+                response_bert = requests.post(
+                    f"{API_URL}/predict_bert",
+                    json={"text_to_analyze": text_to_analyze},
+                    timeout=60,
+                )
+                response_bert.raise_for_status()
+                result_bert = response_bert.json()
 
             except requests.exceptions.ConnectionError:
                 st.error(f"❌ API non joignable sur {API_URL}")
@@ -156,11 +162,19 @@ if analyze:
     st.divider()
     st.subheader("Résultat")
 
-    if predict_label == "FAKE":
-        st.markdown(f'<div class="verdict-fake"><span style="font-size: 4rem;">🚨 FAKE NEWS</span><br><br>Indice de confiance : {predict_score:.1%}</div>', unsafe_allow_html=True)
+#    st.markdown("TF-IDF")
+    if result["Verdict"] == "FAKE":
+        st.markdown(f'<div class="verdict-fake"><span style="font-size: 2rem;">🚨 FAKE NEWS</span><br><br>Confiance : {result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
     else:
-        st.markdown(f'<div class="verdict-real"><span style="font-size: 4rem;">✅ ARTICLE FIABLE</span><br><br>Indice de confiance : {predict_score:.1%}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="verdict-real"><span style="font-size: 2rem;">✅ FIABLE</span><br><br>Confiance : {result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
 
+    # st.markdown("<br>", unsafe_allow_html=True)
+
+    # st.markdown("BERT")
+    # if result_bert["Verdict"] == "FAKE":
+    #     st.markdown(f'<div class="verdict-fake"><span style="font-size: 2rem;">🚨 FAKE NEWS</span><br><br>Confiance : {result_bert["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
+    # else:
+    #     st.markdown(f'<div class="verdict-real"><span style="font-size: 2rem;">✅ FIABLE</span><br><br>Confiance : {result_bert["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
 
 # feedback
 
