@@ -1,9 +1,10 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from preprocessing import data_preprocessing
+from data.preprocessing import data_preprocessing
 from utils import data
 import pickle
+
 
 def init_model():
 

@@ -137,6 +137,7 @@ if analyze:
         st.stop()
 
     # prédiction
+
     with st.spinner("Analyse en cours..."):
         if API_READY:
             try:
@@ -150,6 +151,7 @@ if analyze:
                 predict_label  = result["Verdict"]
                 predict_score  = result["Indice de confiance"]
                 predict_langue = result["Langue"]
+
             except requests.exceptions.ConnectionError:
                 st.error(f"❌ API non joignable sur {API_URL}")
                 st.stop()
@@ -180,6 +182,7 @@ if analyze:
     col3.metric("Langue",              "🇫🇷 Français" if predict_langue == "fr" else "🇬🇧 Anglais")
 
     st.progress(predict_score, text=f"Indice de confiance : {predict_score:.1%}")
+
 
 
 
