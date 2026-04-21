@@ -137,14 +137,6 @@ if analyze:
         st.stop()
 
     # prédiction
-    # col_img, col_metrics = st.columns([1, 2])
-    # with col_img:
-    #     st.image(random.choice(images), use_container_width=True)
-    # with col_metrics:
-    #     st.metric("Verdict :", random.choice(["FAKE NEWS", "REAL NEWS"]))
-    #     st.metric("Indice de confiance :", f"{round(random.uniform(0.65, 0.98), 2):.0%}")
-    #     st.metric("Langue :", random.choice(["Français", "Anglais"]))
-
     with st.spinner("Analyse en cours..."):
         if API_READY:
             try:
@@ -155,9 +147,9 @@ if analyze:
                 )
                 response.raise_for_status()
                 result = response.json()
-                predict_label  = result["label"]
-                predict_score  = result["score"]
-                predict_langue = result["lang"]
+                predict_label  = result["Verdict"]
+                predict_score  = result["Indice de confiance"]
+                predict_langue = result["Langue"]
             except requests.exceptions.ConnectionError:
                 st.error(f"❌ API non joignable sur {API_URL}")
                 st.stop()
@@ -187,7 +179,7 @@ if analyze:
     col2.metric("Indice de confiance", f"{predict_score:.1%}")
     col3.metric("Langue",              "🇫🇷 Français" if predict_langue == "fr" else "🇬🇧 Anglais")
 
-    st.progress(predict_score, text=f"Score de confiance : {predict_score:.1%}")
+    st.progress(predict_score, text=f"Indice de confiance : {predict_score:.1%}")
 
 
 

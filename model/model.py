@@ -3,6 +3,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from preprocessing import data_preprocessing
 from utils import data
+import pickle
 
 def init_model():
 
@@ -22,3 +23,14 @@ def train(model, X, y):
 def pred(model, text):
 
     return model.predict([text])[0]
+
+
+if __name__ == '__main__':
+    X = data["title"].apply(data_preprocessing)
+    y = data["label"]
+
+    model = init_model()
+    model = train(model, X, y)
+
+    with open("models/model.pkl", "wb") as f:
+        pickle.dump(model, f)
