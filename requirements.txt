@@ -25,3 +25,5 @@ lxml[html_clean]
 
 httpx
 python-dotenv
+
+mlflow
