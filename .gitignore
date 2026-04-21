@@ -1,10 +1,9 @@
 .python-version
 .DS_Store
-
-<<<<<<< HEAD
 .python-version
 DS_Store
-=======
 raw_data/
 raw_data/WELFake_Dataset.csv
->>>>>>> 043aa09ddaff11a968bf2412096a08fb511cc804
+__pycache__/
+*.pyc
+utils.py
