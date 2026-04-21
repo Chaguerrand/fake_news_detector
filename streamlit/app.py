@@ -1,27 +1,24 @@
 import streamlit as st
 import requests
 import os
-import random
 from newspaper import Article
 
 
 # params
-
 if "url_count" not in st.session_state:
     st.session_state["url_count"] = 0
 
 if "clear_count" not in st.session_state:
     st.session_state["clear_count"] = 0
 
-images = ["streamlit/chuck_norris.jpg", "streamlit/donald_trump.png"]
-
-predict_label = None
-predict_score = None
-predict_langue = None
-
+img_chuck  = "streamlit/chuck_norris.jpg"
+img_donald = "streamlit/donald_trump.png"
+predict_label = ""
+predict_score = 0.0
+url_input = ""
+text_input = ""
 API_URL = os.getenv("FASTAPI_URL", "http://localhost:8000")
-
-API_READY = True #true quand c'est good
+API_READY = True
 
 st.set_page_config(
     page_title="Fake News Detector",
@@ -62,9 +59,6 @@ st.divider()
 
 # saisie
 tab_url, tab_text = st.tabs(["Analyser depuis une URL", "Analyser depuis du texte brut"])
-
-url_input = ""
-text_input = ""
 
 with tab_url:
     col_url, col_open = st.columns([5, 1])
@@ -116,7 +110,7 @@ if analyze:
                 art.download()
                 art.parse()
                 text_to_analyze = art.text
-                st.success(f"Texte extrait ({len(text_to_analyze)} caractères)")
+                st.success(f"Le texte analysé fait {len(text_to_analyze)} caractères")
 
             except Exception as e:
                 st.error(f"❌ Impossible d'extraire le texte : {e}")
@@ -125,6 +119,7 @@ if analyze:
     # cas 2 : texte brut
     elif text_input:
         text_to_analyze = text_input
+        st.success(f"Le texte analysé fait {len(text_to_analyze)} caractères")
 
     # cas 3 : rien
     else:
@@ -132,25 +127,23 @@ if analyze:
         st.stop()
 
     # validation longueur
-    if len(text_to_analyze.strip()) < 500:
-        st.error("❌ Texte trop court. Veuillez saisir au moins 500 caractères.")
+    if len(text_to_analyze.strip()) < 200:
+        st.error("❌ Texte trop court. Veuillez saisir au moins 200 caractères.")
         st.stop()
 
     # prédiction
-
     with st.spinner("Analyse en cours..."):
         if API_READY:
             try:
                 response = requests.post(
                     f"{API_URL}/predict",
-                    json={"text": text_to_analyze},
+                    json={"text_to_analyze": text_to_analyze},
                     timeout=10,
                 )
                 response.raise_for_status()
                 result = response.json()
                 predict_label  = result["Verdict"]
                 predict_score  = result["Indice de confiance"]
-                predict_langue = result["Langue"]
 
             except requests.exceptions.ConnectionError:
                 st.error(f"❌ API non joignable sur {API_URL}")
@@ -158,37 +151,18 @@ if analyze:
             except Exception as e:
                 st.error(f"❌ Erreur API : {e}")
                 st.stop()
-        else:
-            import time
-            time.sleep(1)
-            predict_label  = random.choice(["FAKE", "REAL"])
-            predict_score  = round(random.uniform(0.65, 0.98), 4)
-            predict_langue = "fr" if any(w in text_to_analyze.lower()
-                                         for w in ["le", "la", "les", "est", "un", "une"]) else "en"
 
-    # résultat
+# résultat
     st.divider()
     st.subheader("Résultat")
 
     if predict_label == "FAKE":
-        st.markdown('<div class="verdict-fake">🚨 FAKE NEWS</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="verdict-fake"><span style="font-size: 4rem;">🚨 FAKE NEWS</span><br><br>Indice de confiance : {predict_score:.1%}</div>', unsafe_allow_html=True)
     else:
-        st.markdown('<div class="verdict-real">✅ ARTICLE FIABLE</div>', unsafe_allow_html=True)
-
-    st.markdown("")
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Verdict",             predict_label)
-    col2.metric("Indice de confiance", f"{predict_score:.1%}")
-    col3.metric("Langue",              "🇫🇷 Français" if predict_langue == "fr" else "🇬🇧 Anglais")
-
-    st.progress(predict_score, text=f"Indice de confiance : {predict_score:.1%}")
-
-
+        st.markdown(f'<div class="verdict-real"><span style="font-size: 4rem;">✅ ARTICLE FIABLE</span><br><br>Indice de confiance : {predict_score:.1%}</div>', unsafe_allow_html=True)
 
 
 # feedback
-
-
 
 #footer
 st.divider()

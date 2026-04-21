@@ -3,3 +3,6 @@
 
 raw_data/
 raw_data/WELFake_Dataset.csv
+
+__pycache__/
+*.pyc
