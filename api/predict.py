@@ -1,7 +1,7 @@
 import os
 import joblib
 from langdetect import detect, DetectorFactory
-from data.preprocessing import data_preprocessing
+from data.preprocessing import clean
 from model.model import pred
 
 DetectorFactory.seed = 42
@@ -18,17 +18,17 @@ def load_model():
     except Exception as e:
         print(f"⚠️ Impossible de charger le modèle : {e}")
 
-def detect_language(text: str) -> str:
-    try:
-        return detect(text)
-    except Exception:
-        return "unknown"
+# def detect_language(text: str) -> str:
+#     try:
+#         return detect(text)
+#     except Exception:
+#         return "unknown"
 
-def predict(text: str) -> dict:
+def predict(text_to_analyze: str) -> dict:
     if pipeline is None:
         raise RuntimeError("Modèle non chargé. Vérifiez MODEL_PATH.")
 
-    cleaned = data_preprocessing(text)
+    cleaned = clean(text_to_analyze)
     label = pred(pipeline, cleaned)
     proba = pipeline.predict_proba([cleaned])[0]
     score = round(float(max(proba)), 4)
@@ -36,5 +36,5 @@ def predict(text: str) -> dict:
     return {
         "label": str(label),
         "score": score,
-        "lang":  detect_language(text),
+        "lang":  detect_language(text_to_analyze),
     }

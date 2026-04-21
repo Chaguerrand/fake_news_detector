@@ -1,6 +1,6 @@
 pandas
 numpy
-langdetect
+#langdetect
 scikit-learn
 
 fastapi
