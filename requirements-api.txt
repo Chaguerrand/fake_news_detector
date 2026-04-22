@@ -7,7 +7,7 @@ fastapi
 pydantic
 uvicorn[standard]
 newspaper3k
-lxml[html_clean]
+lxml_html_clean
 httpx
 python-dotenv
 requests
