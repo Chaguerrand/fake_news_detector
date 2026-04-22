@@ -1,6 +1,6 @@
 import re
 import string
-from utils import data
+
 
 def clean(text):
 
@@ -14,7 +14,7 @@ def clean(text):
     return text
 
 def data_clean():
-
+    from utils import data
     df = data.copy()
 
     df = df.fillna("")
