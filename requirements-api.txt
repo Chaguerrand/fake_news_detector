@@ -13,3 +13,4 @@ python-dotenv
 requests
 beautifulsoup4
 langdetect
+sentencepiece

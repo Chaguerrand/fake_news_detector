@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from data.preprocessing import clean, translate_if_needed, load_translate_model
-#from model.model_hf import load_model_hf, pred_hf
 
 label_mapping = {0: "REAL", 1: "FAKE"}
 
