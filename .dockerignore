@@ -1,0 +1,12 @@
+.git
+.DS_Store
+__pycache__
+*.pyc
+raw_data/
+notebook/
+streamlit/
+.python-version
+docker-compose.yml
+Makefile
+README.md
+.env

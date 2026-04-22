@@ -3,13 +3,13 @@ import torch
 
 HF_MODEL = "pekosmaggle/bert-fakenews"
 
-def load_model():
+def load_model_hf():
     model_hf = DistilBertForSequenceClassification.from_pretrained(HF_MODEL)
     tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
     model_hf.eval()
     return model_hf, tokenizer
 
-def pred(model_hf, tokenizer, text):
+def pred_hf(model_hf, tokenizer, text):
     inputs = tokenizer(
         text,
         max_length=256,
@@ -31,6 +31,6 @@ def pred(model_hf, tokenizer, text):
     }
 
 if __name__ == "__main__":
-    model_hf, tokenizer = load_model()
+    model_hf, tokenizer = load_model_hf()
     test = "Trump says the election was stolen"
-    print(pred(model_hf, tokenizer, test))
+    print(pred_hf(model_hf, tokenizer, test))

@@ -16,7 +16,7 @@ def clean(text):
     return text
 
 def data_clean():
-
+    from utils import data
     df = data.copy()
 
     df = df.fillna("")

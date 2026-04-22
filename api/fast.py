@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from data.preprocessing import clean
+#from model.model_hf import load_model_hf, pred_hf
 
 label_mapping = {0: "REAL", 1: "FAKE"}
 
@@ -22,10 +23,14 @@ app.add_middleware(
 with open("model/model.pkl", "rb") as f:
     app.state.model = pickle.load(f)
 
+#app.state.model_hf, app.state.tokenizer = load_model_hf()
+
 @app.get("/")
 def root():
     return {"greeting": "Hello"}
 
+
+#PREDICT TF-IDF
 @app.post("/predict")
 def predict(request: PredictRequest):
     model = app.state.model
@@ -37,5 +42,11 @@ def predict(request: PredictRequest):
 
     return {"Verdict": str(predict_label), "Indice de confiance": predict_score}
 
+
+#PREDICT BERT
+# @app.post("/predict_bert")
+# def predict_bert(request: PredictRequest):
+#     result_hf = pred_hf(app.state.model_hf, app.state.tokenizer, request.text_to_analyze)
+#     return {"Verdict": result_hf["label"], "Indice de confiance": result_hf["confidence"]}
 
 #ajouter les feedbacks quand on les incluera
