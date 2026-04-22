@@ -2,7 +2,7 @@ import pickle
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from data.preprocessing import clean, translate_if_needed
+from data.preprocessing import clean, translate_if_needed, load_translate_model
 #from model.model_hf import load_model_hf, pred_hf
 
 label_mapping = {0: "REAL", 1: "FAKE"}
@@ -26,7 +26,7 @@ app.add_middleware(
 with open("model/model.pkl", "rb") as f:
     app.state.model = pickle.load(f)
 
-#app.state.model_hf, app.state.tokenizer = load_model_hf()
+app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
 
 @app.get("/")
 def root():
@@ -37,7 +37,7 @@ def root():
 @app.post("/predict")
 def predict(request: PredictRequest):
     model = app.state.model
-    translate = translate_if_needed(request.text_to_analyze)
+    translate = translate_if_needed(request.text_to_analyze, app.state.translator_model, app.state.translator_tokenizer)
     cleaned = clean(translate)
     predict_label = label_mapping[int(model.predict([cleaned])[0])]
     proba = model.predict_proba([cleaned])[0]
@@ -52,7 +52,8 @@ def predict_chrome(request: ChromeRequest):
     art.download()
     art.parse()
     text = art.text
-    cleaned = clean(text)
+    translated = translate_if_needed(text, app.state.translator_model, app.state.translator_tokenizer)
+    cleaned = clean(translated)
     predict_label = label_mapping[int(app.state.model.predict([cleaned])[0])]
     proba = app.state.model.predict_proba([cleaned])[0]
     predict_score = round(float(max(proba)), 4)

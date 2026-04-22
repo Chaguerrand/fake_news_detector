@@ -21,10 +21,13 @@ def data_clean():
     df["article"] = df["article"].apply(clean)
     return df["article"]
 
-def translate_if_needed(text):
+def load_translate_model():
     model_name = "Helsinki-NLP/opus-mt-fr-en"
     tokenizer = MarianTokenizer.from_pretrained(model_name)
     model = MarianMTModel.from_pretrained(model_name)
+    return model, tokenizer
+
+def translate_if_needed(text, model, tokenizer):
     lang = detect(text)
     print("Langue détectée :", lang)
     if lang == "fr":
