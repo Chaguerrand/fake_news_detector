@@ -26,7 +26,8 @@ app.add_middleware(
 with open("model/model.pkl", "rb") as f:
     app.state.model = pickle.load(f)
 
-app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
+app.state.translator_model = None
+app.state.translator_tokenizer = None
 
 @app.get("/")
 def root():
@@ -36,17 +37,20 @@ def root():
 #PREDICT TF-IDF
 @app.post("/predict")
 def predict(request: PredictRequest):
+    if app.state.translator_model is None:
+        app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
     model = app.state.model
     translate = translate_if_needed(request.text_to_analyze, app.state.translator_model, app.state.translator_tokenizer)
     cleaned = clean(translate)
     predict_label = label_mapping[int(model.predict([cleaned])[0])]
     proba = model.predict_proba([cleaned])[0]
     predict_score = round(float(max(proba)), 4)
-
     return {"Verdict": str(predict_label), "Indice de confiance": predict_score}
 
 @app.post("/predict_chrome")
 def predict_chrome(request: ChromeRequest):
+    if app.state.translator_model is None:
+        app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
     from newspaper import Article
     art = Article(request.url)
     art.download()
@@ -58,14 +62,3 @@ def predict_chrome(request: ChromeRequest):
     proba = app.state.model.predict_proba([cleaned])[0]
     predict_score = round(float(max(proba)), 4)
     return {"Verdict": str(predict_label), "Indice de confiance": predict_score}
-
-
-
-
-#PREDICT BERT
-# @app.post("/predict_bert")
-# def predict_bert(request: PredictRequest):
-#     result_hf = pred_hf(app.state.model_hf, app.state.tokenizer, request.text_to_analyze)
-#     return {"Verdict": result_hf["label"], "Indice de confiance": result_hf["confidence"]}
-
-#ajouter les feedbacks quand on les incluera
