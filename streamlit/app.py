@@ -138,7 +138,7 @@ if analyze:
                 response = requests.post(
                     f"{API_URL}/predict",
                     json={"text_to_analyze": text_to_analyze},
-                    timeout=10,
+                    timeout=60,
                 )
                 response.raise_for_status()
                 result = response.json()
