@@ -2,13 +2,16 @@ import pickle
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from data.preprocessing import clean
+from data.preprocessing import clean, translate_if_needed
 #from model.model_hf import load_model_hf, pred_hf
 
 label_mapping = {0: "REAL", 1: "FAKE"}
 
 class PredictRequest(BaseModel):
     text_to_analyze: str
+
+class ChromeRequest(BaseModel):
+    url: str
 
 app = FastAPI()
 
@@ -34,13 +37,28 @@ def root():
 @app.post("/predict")
 def predict(request: PredictRequest):
     model = app.state.model
-    cleaned = clean(request.text_to_analyze)
-
+    translate = translate_if_needed(request.text_to_analyze)
+    cleaned = clean(translate)
     predict_label = label_mapping[int(model.predict([cleaned])[0])]
     proba = model.predict_proba([cleaned])[0]
     predict_score = round(float(max(proba)), 4)
 
     return {"Verdict": str(predict_label), "Indice de confiance": predict_score}
+
+@app.post("/predict_chrome")
+def predict_chrome(request: ChromeRequest):
+    from newspaper import Article
+    art = Article(request.url)
+    art.download()
+    art.parse()
+    text = art.text
+    cleaned = clean(text)
+    predict_label = label_mapping[int(app.state.model.predict([cleaned])[0])]
+    proba = app.state.model.predict_proba([cleaned])[0]
+    predict_score = round(float(max(proba)), 4)
+    return {"Verdict": str(predict_label), "Indice de confiance": predict_score}
+
+
 
 
 #PREDICT BERT

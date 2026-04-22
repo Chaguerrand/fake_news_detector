@@ -1,0 +1,12 @@
+{
+  "name": "Fake News Detector",
+  "description": "Détecteur de fake news directement dans votre navigateur",
+  "version": "1.0",
+  "manifest_version": 3,
+  "host_permissions": ["https://fake-news-detector-210894584132.europe-west1.run.app/*"],
+  "permissions": ["activeTab"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "fake_news.png"
+  }
+}
