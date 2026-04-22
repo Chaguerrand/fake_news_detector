@@ -1,0 +1,14 @@
+pandas
+numpy
+scikit-learn
+transformers
+torch
+fastapi
+pydantic
+uvicorn[standard]
+newspaper3k
+lxml[html_clean]
+httpx
+python-dotenv
+requests
+beautifulsoup4
