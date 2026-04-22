@@ -2,13 +2,7 @@ import pickle
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-<<<<<<< HEAD
 from data.preprocessing import clean, translate_if_needed
-=======
-from data.preprocessing import clean
-#from model.model_hf import load_model_hf, pred_hf
->>>>>>> 95b614d2c1ed41b896e256dabd8c3197407b2a89
-
 label_mapping = {0: "REAL", 1: "FAKE"}
 
 class PredictRequest(BaseModel):
