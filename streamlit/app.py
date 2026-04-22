@@ -143,13 +143,13 @@ if analyze:
                 response.raise_for_status()
                 result = response.json()
 
-                response_bert = requests.post(
-                    f"{API_URL}/predict_bert",
-                    json={"text_to_analyze": text_to_analyze},
-                    timeout=60,
-                )
-                response_bert.raise_for_status()
-                result_bert = response_bert.json()
+                # response_bert = requests.post(
+                #     f"{API_URL}/predict_bert",
+                #     json={"text_to_analyze": text_to_analyze},
+                #     timeout=60,
+                # )
+                # response_bert.raise_for_status()
+                # result_bert = response_bert.json()
 
             except requests.exceptions.ConnectionError:
                 st.error(f"❌ API non joignable sur {API_URL}")
