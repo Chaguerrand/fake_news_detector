@@ -26,11 +26,6 @@ def data_clean():
 
     return df["article"]
 
-model_name = "Helsinki-NLP/opus-mt-fr-en"
-
-tokenizer = MarianTokenizer.from_pretrained(model_name)
-model = MarianMTModel.from_pretrained(model_name)
-
 def translate_if_needed(text):
 
     model_name = "Helsinki-NLP/opus-mt-fr-en"
@@ -41,7 +36,7 @@ def translate_if_needed(text):
 
     print("Langue détectée :", lang)
 
-    if lang == "en":
+    if lang == "fr":
         inputs = tokenizer(text, return_tensors="pt", padding=True)
         outputs = model.generate(**inputs)
         return tokenizer.decode(outputs[0], skip_special_tokens=True)
