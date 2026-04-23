@@ -138,7 +138,7 @@ if analyze:
                 response = requests.post(
                     f"{API_URL}/predict",
                     json={"text_to_analyze": text_to_analyze},
-                    timeout=10,
+                    timeout=60,
                 )
                 response.raise_for_status()
                 result = response.json()
@@ -164,9 +164,9 @@ if analyze:
 
 #    st.markdown("TF-IDF")
     if result["Verdict"] == "FAKE":
-        st.markdown(f'<div class="verdict-fake"><span style="font-size: 2rem;">🚨 FAKE NEWS</span><br><br>Confiance : {result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="verdict-fake"><span style="font-size: 2rem;">🚨 FAKE NEWS</span><br><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
     else:
-        st.markdown(f'<div class="verdict-real"><span style="font-size: 2rem;">✅ FIABLE</span><br><br>Confiance : {result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="verdict-real"><span style="font-size: 2rem;">✅ ARTICLE FIABLE</span><br><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
 
     # st.markdown("<br>", unsafe_allow_html=True)
 

@@ -7,8 +7,10 @@ fastapi
 pydantic
 uvicorn[standard]
 newspaper3k
-lxml[html_clean]
+lxml_html_clean
 httpx
 python-dotenv
 requests
 beautifulsoup4
+langdetect
+sentencepiece

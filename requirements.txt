@@ -1,6 +1,6 @@
 pandas
 numpy
-#langdetect
+langdetect
 scikit-learn
 transformers
 torch
@@ -21,7 +21,7 @@ joblib
 uvicorn[standard]
 
 newspaper3k
-lxml[html_clean]
+lxml_html_clean
 
 httpx
 python-dotenv
@@ -29,3 +29,4 @@ python-dotenv
 langdetect
 
 mlflow
+sentencepiece
