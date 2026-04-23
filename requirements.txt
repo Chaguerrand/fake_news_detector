@@ -26,5 +26,7 @@ lxml_html_clean
 httpx
 python-dotenv
 
+langdetect
+
 mlflow
 sentencepiece

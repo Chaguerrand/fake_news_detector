@@ -2,6 +2,7 @@ import pickle
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
 from data.preprocessing import clean, translate_if_needed, load_translate_model
 
 label_mapping = {0: "REAL", 1: "FAKE"}
@@ -39,11 +40,20 @@ def predict(request: PredictRequest):
     if app.state.translator_model is None:
         app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
     model = app.state.model
-    translate = translate_if_needed(request.text_to_analyze, app.state.translator_model, app.state.translator_tokenizer)
+
+    translate = translate_if_needed(request.text_to_analyze)
     cleaned = clean(translate)
-    predict_label = label_mapping[int(model.predict([cleaned])[0])]
-    proba = model.predict_proba([cleaned])[0]
-    predict_score = round(float(max(proba)), 4)
+    
+    proba = model.predict_proba([cleaned])[0,1]
+
+    threshold = 0.92
+
+    pred = int(proba >= threshold)
+
+    predict_label = label_mapping[pred]
+
+    predict_score = round(float(proba),4)
+
     return {"Verdict": str(predict_label), "Indice de confiance": predict_score}
 
 @app.post("/predict_chrome")
