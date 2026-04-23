@@ -1,23 +1,11 @@
 beautifulsoup4
-<<<<<<< Updated upstream
-joblib
-
-uvicorn[standard]
-
-newspaper3k
-lxml[html_clean]
-
-=======
 fastapi
->>>>>>> Stashed changes
 httpx
 joblib
 kaggle
 langdetect
 lxml
 mlflow
-<<<<<<< Updated upstream
-=======
 numpy
 pandas
 pydantic
@@ -30,4 +18,3 @@ streamlit
 torch
 transformers
 uvicorn[standard]
->>>>>>> Stashed changes
