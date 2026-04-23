@@ -35,10 +35,16 @@ def predict(request: PredictRequest):
 
     translate = translate_if_needed(request.text_to_analyze)
     cleaned = clean(translate)
+    
+    proba = model.predict_proba([cleaned])[0,1]
 
-    predict_label = label_mapping[int(model.predict([cleaned])[0])]
-    proba = model.predict_proba([cleaned])[0]
-    predict_score = round(float(max(proba)), 4)
+    threshold = 0.92
+
+    pred = int(proba >= threshold)
+
+    predict_label = label_mapping[pred]
+
+    predict_score = round(float(proba),4)
 
     return {"Verdict": str(predict_label), "Indice de confiance": predict_score}
 
