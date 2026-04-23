@@ -71,4 +71,4 @@ def predict_chrome(request: ChromeRequest):
         verdict = "⚠️ NON CONCLUANT"
     else:
         verdict = label_mapping[int(app.state.model.predict([cleaned])[0])]
-    return {"Verdict": verdict, "Indice de confiance": confidence}
+    return {"Verdict": verdict, "Indice de confiance": confidence, "Label": label_mapping[int(model.predict([cleaned])[0])]}
