@@ -48,6 +48,7 @@ st.markdown("""
         font-size: 1.4rem;
         font-weight: bold;
         color: #21c354;
+    }
     .verdict-inconclusive {
         background-color: #ffd70022;
         border: 1px solid #ffd700;
