@@ -170,6 +170,7 @@ if analyze:
     elif result["Verdict"] == "REAL":
         st.markdown(f'<div class="verdict-real"><span style="font-size: 2rem;">✅ ARTICLE FIABLE</span><br><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
     else:
+        label_hint = "Relativement fiable" if result["Label"] == "REAL" else "Relativement fake"
         st.markdown(f'<div class="verdict-inconclusive"><span style="font-size: 2rem;">⚠️ NON CONCLUANT</span><br><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
 
 # feedback
