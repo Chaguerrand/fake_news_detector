@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import os
-from newspaper import Article
+from bs4 import BeautifulSoup
 
 
 # params
@@ -48,6 +48,15 @@ st.markdown("""
         font-size: 1.4rem;
         font-weight: bold;
         color: #21c354;
+    .verdict-inconclusive {
+        background-color: #ffd70022;
+        border: 1px solid #ffd700;
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #ffd700;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -106,10 +115,9 @@ if analyze:
     if url_input:
         with st.spinner("Extraction en cours..."):
             try:
-                art = Article(url_input)
-                art.download()
-                art.parse()
-                text_to_analyze = art.text
+                response_url = requests.get(url_input)
+                soup = BeautifulSoup(response_url.content, "lxml")
+                text_to_analyze = " ".join([p.text for p in soup.find_all("p")])
                 st.success(f"Le texte analysé fait {len(text_to_analyze)} caractères")
 
             except Exception as e:
@@ -132,6 +140,7 @@ if analyze:
         st.stop()
 
     # prédiction
+    result = {}
     with st.spinner("Analyse en cours..."):
         if API_READY:
             try:
@@ -142,14 +151,6 @@ if analyze:
                 )
                 response.raise_for_status()
                 result = response.json()
-
-                # response_bert = requests.post(
-                #     f"{API_URL}/predict_bert",
-                #     json={"text_to_analyze": text_to_analyze},
-                #     timeout=60,
-                # )
-                # response_bert.raise_for_status()
-                # result_bert = response_bert.json()
 
             except requests.exceptions.ConnectionError:
                 st.error(f"❌ API non joignable sur {API_URL}")
@@ -165,16 +166,10 @@ if analyze:
 #    st.markdown("TF-IDF")
     if result["Verdict"] == "FAKE":
         st.markdown(f'<div class="verdict-fake"><span style="font-size: 2rem;">🚨 FAKE NEWS</span><br><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
-    else:
+    elif result["Verdict"] == "REAL":
         st.markdown(f'<div class="verdict-real"><span style="font-size: 2rem;">✅ ARTICLE FIABLE</span><br><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
-
-    # st.markdown("<br>", unsafe_allow_html=True)
-
-    # st.markdown("BERT")
-    # if result_bert["Verdict"] == "FAKE":
-    #     st.markdown(f'<div class="verdict-fake"><span style="font-size: 2rem;">🚨 FAKE NEWS</span><br><br>Confiance : {result_bert["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
-    # else:
-    #     st.markdown(f'<div class="verdict-real"><span style="font-size: 2rem;">✅ FIABLE</span><br><br>Confiance : {result_bert["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="verdict-inconclusive"><span style="font-size: 2rem;">⚠️ NON CONCLUANT</span><br><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
 
 # feedback
 

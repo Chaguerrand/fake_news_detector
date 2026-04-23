@@ -9,12 +9,16 @@ document.getElementById("analyzeBtn").addEventListener("click", async () => {
     });
 
     const data = await response.json();
-    const verdict = data["Verdict"] === "FAKE" ? "🚨 FAKE NEWS" : "✅ ARTICLE FIABLE";
     const score = (data["Indice de confiance"] * 100).toFixed(1) + "%";
+
+    let verdictText, cssClass;
+    if (data["Verdict"] === "FAKE") { verdictText = "🚨 FAKE NEWS"; cssClass = "verdict-fake"; }
+    else if (data["Verdict"] === "REAL") { verdictText = "✅ ARTICLE FIABLE"; cssClass = "verdict-real"; }
+    else { verdictText = "⚠️ NON CONCLUANT"; cssClass = "verdict-inconclusive"; }
+
     document.getElementById("resultTitle").style.display = "block";
-    const cssClass = data["Verdict"] === "FAKE" ? "verdict-fake" : "verdict-real";
     document.getElementById("result").className = cssClass;
-    document.getElementById("result").innerHTML = verdict + "<br>" + score;
+    document.getElementById("result").innerHTML = verdictText + "<br>" + score;
   } catch(e) {
     document.getElementById("result").textContent = "Erreur : " + e.message;
   }
