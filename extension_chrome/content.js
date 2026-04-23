@@ -10,6 +10,13 @@ document.getElementById("analyzeBtn").addEventListener("click", async () => {
       body: JSON.stringify({url: tab.url}),
     });
 
+    if (!response.ok) {
+      document.getElementById("loadingMsg").style.display = "none";
+      document.getElementById("result").className = "verdict-error";
+      document.getElementById("result").innerHTML = "❌ Récupération du contenu bloquée.<br>Analyse impossible.";
+      return;
+}
+
     const data = await response.json();
     const score = (data["Indice de confiance"] * 100).toFixed(1) + "%";
     const elapsed = ((Date.now() - start) / 1000).toFixed(2);
