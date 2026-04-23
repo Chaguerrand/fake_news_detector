@@ -47,7 +47,7 @@ def predict(request: PredictRequest):
     cleaned = clean(translate)
     proba = model.predict_proba([cleaned])[0]
     confidence = round(float(max(proba)), 4)
-    if confidence < 0.70:
+    if confidence < 0.85:
         verdict = "⚠️ NON CONCLUANT"
     else:
         verdict = label_mapping[int(model.predict([cleaned])[0])]
@@ -67,7 +67,7 @@ def predict_chrome(request: ChromeRequest):
     cleaned = clean(translated)
     proba = app.state.model.predict_proba([cleaned])[0]
     confidence = round(float(max(proba)), 4)
-    if confidence < 0.70:
+    if confidence < 0.85:
         verdict = "⚠️ NON CONCLUANT"
     else:
         verdict = label_mapping[int(app.state.model.predict([cleaned])[0])]
