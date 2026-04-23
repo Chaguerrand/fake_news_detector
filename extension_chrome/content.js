@@ -1,4 +1,5 @@
 document.getElementById("analyzeBtn").addEventListener("click", async () => {
+  document.getElementById("loadingMsg").style.display = "block";
   try {
     const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
 
@@ -16,10 +17,12 @@ document.getElementById("analyzeBtn").addEventListener("click", async () => {
     else if (data["Verdict"] === "REAL") { verdictText = "✅ ARTICLE FIABLE"; cssClass = "verdict-real"; }
     else { verdictText = "⚠️ NON CONCLUANT"; cssClass = "verdict-inconclusive"; }
 
+    document.getElementById("loadingMsg").style.display = "none";
     document.getElementById("resultTitle").style.display = "block";
     document.getElementById("result").className = cssClass;
     document.getElementById("result").innerHTML = verdictText + "<br>" + score;
   } catch(e) {
+    document.getElementById("loadingMsg").style.display = "none";
     document.getElementById("result").textContent = "Erreur : " + e.message;
   }
 });
