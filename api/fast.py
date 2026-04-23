@@ -47,13 +47,11 @@ def predict(request: PredictRequest):
     cleaned = clean(translate)
     proba = model.predict_proba([cleaned])[0]
     confidence = round(float(max(proba)), 4)
-    if confidence < 0.85:
-        verdict = "⚠️ NON CONCLUANT"
-    else:
-        verdict = label_mapping[int(model.predict([cleaned])[0])]
-    return {"Verdict": verdict, "Indice de confiance": confidence, "Label": label_mapping[int(model.predict([cleaned])[0])]}
+    label = label_mapping[int(model.predict([cleaned])[0])]
+    verdict = "NON CONCLUANT" if confidence < 0.85 else label
+    return {"Verdict": verdict, "Indice de confiance": confidence, "Label": label}
 
-
+#PREDICT CHROME
 @app.post("/predict_chrome")
 def predict_chrome(request: ChromeRequest):
     if app.state.translator_model is None:
@@ -67,8 +65,6 @@ def predict_chrome(request: ChromeRequest):
     cleaned = clean(translated)
     proba = app.state.model.predict_proba([cleaned])[0]
     confidence = round(float(max(proba)), 4)
-    if confidence < 0.85:
-        verdict = "⚠️ NON CONCLUANT"
-    else:
-        verdict = label_mapping[int(app.state.model.predict([cleaned])[0])]
-    return {"Verdict": verdict, "Indice de confiance": confidence, "Label": label_mapping[int(model.predict([cleaned])[0])]}
+    label = label_mapping[int(app.state.model.predict([cleaned])[0])]
+    verdict = "NON CONCLUANT" if confidence < 0.85 else label
+    return {"Verdict": verdict, "Indice de confiance": confidence, "Label": label}
