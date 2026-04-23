@@ -51,7 +51,7 @@ def predict(request: PredictRequest):
         verdict = "⚠️ NON CONCLUANT"
     else:
         verdict = label_mapping[int(model.predict([cleaned])[0])]
-    return {"Verdict": verdict, "Indice de confiance": confidence}
+    return {"Verdict": verdict, "Indice de confiance": confidence, "Label": label_mapping[int(model.predict([cleaned])[0])]}
 
 
 @app.post("/predict_chrome")
