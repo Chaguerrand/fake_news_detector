@@ -2,16 +2,18 @@ import pickle
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from data.preprocessing import clean, translate_if_needed
-#from model.model_hf import load_model_hf, pred_hf
+from data.preprocessing import clean, translate_if_needed, load_translate_model
 
 label_mapping = {0: "REAL", 1: "FAKE"}
+
 
 class PredictRequest(BaseModel):
     text_to_analyze: str
 
+
 class ChromeRequest(BaseModel):
     url: str
+
 
 app = FastAPI()
 
@@ -26,7 +28,9 @@ app.add_middleware(
 with open("model/model.pkl", "rb") as f:
     app.state.model = pickle.load(f)
 
-#app.state.model_hf, app.state.tokenizer = load_model_hf()
+app.state.translator_model = None
+app.state.translator_tokenizer = None
+
 
 @app.get("/")
 def root():
@@ -36,35 +40,35 @@ def root():
 #PREDICT TF-IDF
 @app.post("/predict")
 def predict(request: PredictRequest):
+    if app.state.translator_model is None:
+        app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
     model = app.state.model
-    translate = translate_if_needed(request.text_to_analyze)
+    translate = translate_if_needed(request.text_to_analyze, app.state.translator_model, app.state.translator_tokenizer)
     cleaned = clean(translate)
-    predict_label = label_mapping[int(model.predict([cleaned])[0])]
     proba = model.predict_proba([cleaned])[0]
-    predict_score = round(float(max(proba)), 4)
+    confidence = round(float(max(proba)), 4)
+    if confidence < 0.70:
+        verdict = "⚠️ NON CONCLUANT"
+    else:
+        verdict = label_mapping[int(model.predict([cleaned])[0])]
+    return {"Verdict": verdict, "Indice de confiance": confidence}
 
-    return {"Verdict": str(predict_label), "Indice de confiance": predict_score}
 
 @app.post("/predict_chrome")
 def predict_chrome(request: ChromeRequest):
-    from newspaper import Article
-    art = Article(request.url)
-    art.download()
-    art.parse()
-    text = art.text
-    cleaned = clean(text)
-    predict_label = label_mapping[int(app.state.model.predict([cleaned])[0])]
+    if app.state.translator_model is None:
+        app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
+    import requests as req
+    from bs4 import BeautifulSoup
+    response_url = req.get(request.url)
+    soup = BeautifulSoup(response_url.content, "lxml")
+    text = " ".join([p.text for p in soup.find_all("p")])
+    translated = translate_if_needed(text, app.state.translator_model, app.state.translator_tokenizer)
+    cleaned = clean(translated)
     proba = app.state.model.predict_proba([cleaned])[0]
-    predict_score = round(float(max(proba)), 4)
-    return {"Verdict": str(predict_label), "Indice de confiance": predict_score}
-
-
-
-
-#PREDICT BERT
-# @app.post("/predict_bert")
-# def predict_bert(request: PredictRequest):
-#     result_hf = pred_hf(app.state.model_hf, app.state.tokenizer, request.text_to_analyze)
-#     return {"Verdict": result_hf["label"], "Indice de confiance": result_hf["confidence"]}
-
-#ajouter les feedbacks quand on les incluera
+    confidence = round(float(max(proba)), 4)
+    if confidence < 0.70:
+        verdict = "⚠️ NON CONCLUANT"
+    else:
+        verdict = label_mapping[int(app.state.model.predict([cleaned])[0])]
+    return {"Verdict": verdict, "Indice de confiance": confidence}

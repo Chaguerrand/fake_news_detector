@@ -1,21 +1,5 @@
-pandas
-numpy
-langdetect
-scikit-learn
-transformers
-torch
-
-fastapi
-pydantic
-
-streamlit
-requests
-
-pytest
-
-kaggle
-
 beautifulsoup4
+<<<<<<< Updated upstream
 joblib
 
 uvicorn[standard]
@@ -23,7 +7,27 @@ uvicorn[standard]
 newspaper3k
 lxml[html_clean]
 
+=======
+fastapi
+>>>>>>> Stashed changes
 httpx
-python-dotenv
-
+joblib
+kaggle
+langdetect
+lxml
 mlflow
+<<<<<<< Updated upstream
+=======
+numpy
+pandas
+pydantic
+python-dotenv
+pytest
+requests
+scikit-learn
+sentencepiece
+streamlit
+torch
+transformers
+uvicorn[standard]
+>>>>>>> Stashed changes

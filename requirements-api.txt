@@ -1,15 +1,27 @@
-pandas
-numpy
-scikit-learn
-transformers
-torch
+beautifulsoup4
 fastapi
+<<<<<<< Updated upstream
 pydantic
 uvicorn[standard]
 newspaper3k
 lxml[html_clean]
+=======
+>>>>>>> Stashed changes
 httpx
+langdetect
+lxml
+numpy
+pandas
+pydantic
 python-dotenv
 requests
+<<<<<<< Updated upstream
 beautifulsoup4
 langdetect
+=======
+scikit-learn
+sentencepiece
+torch
+transformers
+uvicorn[standard]
+>>>>>>> Stashed changes
