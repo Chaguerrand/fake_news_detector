@@ -4,6 +4,7 @@ httpx
 joblib
 kaggle
 langchain
+langchain-google-genai
 langchain-google-vertexai
 langchain-community
 langdetect
