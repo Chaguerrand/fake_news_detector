@@ -2,6 +2,7 @@ beautifulsoup4
 fastapi
 httpx
 langchain
+langchain-google-genai
 langchain-google-vertexai
 langchain-community
 langdetect
