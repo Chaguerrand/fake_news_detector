@@ -95,11 +95,11 @@ with tab_text:
     )
 
 with tab_jeu:
-    text_input = st.text_area(
+    text_input_jeu = st.text_area(
         "Coucou Alex",
         height=200,
         placeholder="Emplacement vide pour le jeu",
-        key=f"input_text_{st.session_state['clear_count']}",
+        key=f"input_jeu_{st.session_state['clear_count']}",
     )
 
 
