@@ -18,3 +18,8 @@ streamlit
 torch
 transformers
 uvicorn[standard]
+langchain
+langchain-google-vertexai
+langchain-community
+tavily-python
+python-dotenv
