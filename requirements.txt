@@ -5,8 +5,8 @@ joblib
 kaggle
 langchain
 langchain-google-genai
-langchain-google-vertexai
 langchain-community
+langgraph
 langdetect
 lxml
 mlflow
