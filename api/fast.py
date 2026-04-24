@@ -8,7 +8,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.prebuilt import create_react_agent
 
-MODEL_PATH="model/model_SVC.pkl"
+MODEL_PATH="model/model.pkl"
 
 class PredictRequest(BaseModel):
     text_to_analyze: str
