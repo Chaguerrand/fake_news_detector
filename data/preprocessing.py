@@ -27,6 +27,8 @@ def load_translate_model():
     return model, tokenizer
 
 def translate_if_needed(text, model, tokenizer):
+    if not text or len(text.strip()) < 10:  # texte trop court = rien à détecter
+        return text
     lang = detect(text)
     print("Langue détectée :", lang)
     if lang == "fr":

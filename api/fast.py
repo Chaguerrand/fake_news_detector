@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from data.preprocessing import clean, translate_if_needed, load_translate_model
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain.agents import create_react_agent
+from langgraph.prebuilt import create_react_agent
 
 MODEL_PATH="model/model_SVC.pkl"
 
@@ -83,8 +83,7 @@ def predict_chrome(request: ChromeRequest):
 def fact_check(request: FactCheckRequest):
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
-        google_api_key=os.getenv("GOOGLE_API_KEY")
-    )
+        google_api_key=os.getenv("GOOGLE_API_KEY"))
     search_tool = TavilySearchResults(max_results=5)
     fact_checker = create_react_agent(llm, [search_tool], prompt=FACT_CHECK_PROMPT)
     result = fact_checker.invoke({"messages": [("user", f"Classification ML : FAKE\n\nArticle : {request.text_to_analyze}")]})
