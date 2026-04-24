@@ -3,6 +3,9 @@ fastapi
 httpx
 joblib
 kaggle
+langchain
+langchain-google-vertexai
+langchain-community
 langdetect
 lxml
 mlflow
@@ -15,11 +18,7 @@ requests
 scikit-learn
 sentencepiece
 streamlit
+tavily-python
 torch
 transformers
 uvicorn[standard]
-langchain
-langchain-google-vertexai
-langchain-community
-tavily-python
-python-dotenv

@@ -69,7 +69,7 @@ st.caption("Détection et catégorisation de Fake News")
 st.divider()
 
 # saisie
-tab_url, tab_text = st.tabs(["Analyser depuis une URL", "Analyser depuis du texte brut"])
+tab_url, tab_text, tab_jeu = st.tabs(["Analyser depuis une URL", "Analyser depuis du texte brut", "Petit jeu d'Alex"])
 
 with tab_url:
     col_url, col_open = st.columns([5, 1])
@@ -94,6 +94,15 @@ with tab_text:
         key=f"input_text_{st.session_state['clear_count']}",
     )
 
+with tab_jeu:
+    text_input = st.text_area(
+        "Coucou Alex",
+        height=200,
+        placeholder="Emplacement vide pour le jeu",
+        key=f"input_text_{st.session_state['clear_count']}",
+    )
+
+
 # bouton
 st.divider()
 col_btn, col_clear = st.columns([5, 1])
@@ -117,7 +126,7 @@ if analyze:
     if url_input:
         with st.spinner("Extraction en cours..."):
             try:
-                response_url = requests.get(url_input)
+                response_url = requests.get(url_input, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"})
                 soup = BeautifulSoup(response_url.content, "lxml")
                 text_to_analyze = " ".join([p.text for p in soup.find_all("p")])
                 st.success(f"Le texte analysé fait {len(text_to_analyze)} caractères")
