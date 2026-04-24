@@ -12,6 +12,15 @@ if "url_count" not in st.session_state:
 if "clear_count" not in st.session_state:
     st.session_state["clear_count"] = 0
 
+if "result" not in st.session_state:
+    st.session_state["result"] = None
+
+if "text_to_analyze" not in st.session_state:
+    st.session_state["text_to_analyze"] = ""
+
+if "elapsed" not in st.session_state:
+    st.session_state["elapsed"] = 0
+
 API_URL = os.getenv("FASTAPI_URL", "http://localhost:8000")
 API_READY = True
 
@@ -105,6 +114,9 @@ with col_clear:
     if st.button("🗑️ Effacer", use_container_width=True):
         st.session_state["clear_count"] += 1
         st.session_state["url_count"] += 1
+        st.session_state["result"] = None
+        st.session_state["text_to_analyze"] = ""
+        st.session_state["elapsed"] = 0
         st.session_state["show_cleared"] = True
         st.rerun()
 
@@ -146,7 +158,6 @@ if analyze:
         st.stop()
 
     # prédiction
-    result = {}
     with st.spinner("Analyse en cours..."):
         if API_READY:
             try:
@@ -157,8 +168,9 @@ if analyze:
                     timeout=60,
                 )
                 response.raise_for_status()
-                result = response.json()
-                elapsed = round(time.time() - start, 2)
+                st.session_state["result"] = response.json()
+                st.session_state["text_to_analyze"] = text_to_analyze
+                st.session_state["elapsed"] = round(time.time() - start, 2)
             except requests.exceptions.ConnectionError:
                 st.error(f"❌ API non joignable sur {API_URL}")
                 st.stop()
@@ -166,36 +178,40 @@ if analyze:
                 st.error(f"❌ Erreur API : {e}")
                 st.stop()
 
-    # résultat
-    if result:
-        st.divider()
-        st.subheader("Résultat")
+# résultat
+if st.session_state["result"]:
+    result = st.session_state["result"]
+    text_to_analyze = st.session_state["text_to_analyze"]
+    elapsed = st.session_state["elapsed"]
 
-        if result["Verdict"] == "FAKE":
-            st.markdown(f'<div class="verdict-fake"><span style="font-size: 2rem;">🚨 FAKE NEWS</span><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
-            if result["Indice de confiance"] >= 0.92:
-                if st.button("🔍 Chercher des sources vérifiées", use_container_width=True):
-                    with st.spinner("Recherche de sources en cours..."):
-                        try:
-                            response_fc = requests.post(
-                                f"{API_URL}/fact_check",
-                                json={"text_to_analyze": text_to_analyze},
-                                timeout=60,
-                            )
-                            response_fc.raise_for_status()
-                            result_fc = response_fc.json()
-                            st.markdown(result_fc["result"])
-                        except Exception as e:
-                            st.error(f"❌ Erreur fact-check : {e}")
+    st.divider()
+    st.subheader("Résultat")
 
-        elif result["Verdict"] == "REAL":
-            st.markdown(f'<div class="verdict-real"><span style="font-size: 2rem;">✅ ARTICLE FIABLE</span><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
+    if result["Verdict"] == "FAKE":
+        st.markdown(f'<div class="verdict-fake"><span style="font-size: 2rem;">🚨 FAKE NEWS</span><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
+        if result["Indice de confiance"] >= 0.92:
+            if st.button("🔍 Chercher des sources vérifiées", use_container_width=True):
+                with st.spinner("Recherche de sources en cours..."):
+                    try:
+                        response_fc = requests.post(
+                            f"{API_URL}/fact_check",
+                            json={"text_to_analyze": text_to_analyze},
+                            timeout=60,
+                        )
+                        response_fc.raise_for_status()
+                        result_fc = response_fc.json()
+                        st.markdown(result_fc["result"])
+                    except Exception as e:
+                        st.error(f"❌ Erreur fact-check : {e}")
 
-        else:
-            label_hint = "Relativement fiable" if result["Label"] == "REAL" else "Relativement fake"
-            st.markdown(f'<div class="verdict-inconclusive"><span style="font-size: 2rem;">⚠️ NON CONCLUANT</span><br>{label_hint}<br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
+    elif result["Verdict"] == "REAL":
+        st.markdown(f'<div class="verdict-real"><span style="font-size: 2rem;">✅ ARTICLE FIABLE</span><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
 
-        st.caption(f"⏱️ Analyse effectuée en {elapsed}s")
+    else:
+        label_hint = "Relativement fiable" if result["Label"] == "REAL" else "Relativement fake"
+        st.markdown(f'<div class="verdict-inconclusive"><span style="font-size: 2rem;">⚠️ NON CONCLUANT</span><br>{label_hint}<br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
+
+    st.caption(f"⏱️ Analyse effectuée en {elapsed}s")
 
 # footer
 st.divider()
