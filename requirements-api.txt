@@ -1,6 +1,9 @@
 beautifulsoup4
 fastapi
 httpx
+langchain
+langchain-google-vertexai
+langchain-community
 langdetect
 lxml
 numpy
@@ -10,6 +13,7 @@ python-dotenv
 requests
 scikit-learn
 sentencepiece
+tavily-python
 torch
 transformers
 uvicorn[standard]

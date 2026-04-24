@@ -4,18 +4,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from data.preprocessing import clean, translate_if_needed, load_translate_model
 
-label_mapping = {0: "REAL", 1: "FAKE"}
-
+MODEL_PATH="model/model_SVC.pkl"
 
 class PredictRequest(BaseModel):
     text_to_analyze: str
 
-
 class ChromeRequest(BaseModel):
     url: str
 
-
 app = FastAPI()
+label_mapping = {0: "REAL", 1: "FAKE"}
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,7 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-with open("model/model.pkl", "rb") as f:
+with open(MODEL_PATH, "rb") as f:
     app.state.model = pickle.load(f)
 
 app.state.translator_model = None
@@ -58,7 +56,7 @@ def predict_chrome(request: ChromeRequest):
         app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
     import requests as req
     from bs4 import BeautifulSoup
-    response_url = req.get(request.url)
+    response_url = req.get(request.url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"})
     soup = BeautifulSoup(response_url.content, "lxml")
     text = " ".join([p.text for p in soup.find_all("p")])
     translated = translate_if_needed(text, app.state.translator_model, app.state.translator_tokenizer)

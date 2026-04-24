@@ -1,10 +1,9 @@
 .python-version
 .DS_Store
-.python-version
-DS_Store
 raw_data/
+raw_data/*
 raw_data/WELFake_Dataset.csv
 __pycache__/
 *.pyc
 utils.py
-model_SVC.pkl
+.env
