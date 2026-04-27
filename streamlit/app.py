@@ -236,6 +236,16 @@ if st.session_state["result"]:
                         response_fc.raise_for_status()
                         result_fc = response_fc.json()
                         st.markdown(result_fc["result"])
+                        st.divider()
+                        st.markdown(
+    """**Légende :**
+    - **FACTUEL** : claim vérifiable par des faits
+    - **INTERPRÉTATIF** : claim subjectif ou ambigu
+    - **CONFIRMÉ** : les sources valident le claim
+    - **CONTREDIT** : les sources réfutent le claim
+    - **NON ÉTABLI** : aucune source fiable ne permet de trancher
+    - **TROMPEUR** : le claim est factuellement incomplet ou décontextualisé
+    """)
                     except Exception as e:
                         st.error(f"❌ Erreur fact-check : {e}")
 
