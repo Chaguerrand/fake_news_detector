@@ -41,6 +41,8 @@ if "feedback_given" not in st.session_state:
     st.session_state["feedback_given"] = False
 if "row_index" not in st.session_state:
     st.session_state["row_index"] = None
+if "source_tab" not in st.session_state:
+    st.session_state["source_tab"] = None
 
 API_URL = os.getenv("FASTAPI_URL", "http://localhost:8000")
 API_READY = True
@@ -93,10 +95,65 @@ st.title("📰 Fake News Detector 📰")
 st.caption("Détection et catégorisation de Fake News")
 st.divider()
 
-# ── LOAD DATA (définie une seule fois) ───────────────────────
+# ── LOAD DATA ────────────────────────────────────────────────
 @st.cache_data(ttl=60)
 def load_data(_sheet):
     return _sheet.get_all_records()
+
+# ── FONCTION RÉSULTAT ────────────────────────────────────────
+def display_result():
+    if not st.session_state["result"]:
+        return
+    result = st.session_state["result"]
+    text_to_analyze = st.session_state["text_to_analyze"]
+    elapsed = st.session_state["elapsed"]
+
+    st.divider()
+    st.subheader("Résultat")
+
+    if result["Verdict"] == "FAKE":
+        st.markdown(f'<div class="verdict-fake"><span style="font-size: 2rem;">🚨 FAKE NEWS</span><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
+        if result["Indice de confiance"] >= 0.92:
+            if st.button("🔍 Chercher des sources vérifiées", use_container_width=True):
+                with st.spinner("Recherche de sources en cours..."):
+                    try:
+                        response_fc = requests.post(
+                            f"{API_URL}/fact_check",
+                            json={"text_to_analyze": text_to_analyze, "row_index": st.session_state["row_index"]},
+                            timeout=60,
+                        )
+                        response_fc.raise_for_status()
+                        result_fc = response_fc.json()
+                        st.markdown(result_fc["result"])
+                    except Exception as e:
+                        st.error(f"❌ Erreur fact-check : {e}")
+
+    elif result["Verdict"] == "REAL":
+        st.markdown(f'<div class="verdict-real"><span style="font-size: 2rem;">✅ ARTICLE FIABLE</span><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
+
+    else:
+        label_hint = "Relativement fiable" if result["Label"] == "REAL" else "Relativement fake"
+        st.markdown(f'<div class="verdict-inconclusive"><span style="font-size: 2rem;">⚠️ NON CONCLUANT</span><br>{label_hint}<br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
+
+    st.caption(f"⏱️ Analyse effectuée en {elapsed}s")
+
+    if sheet2 and st.session_state["row_index"]:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if not st.session_state["feedback_given"]:
+            st.markdown("**Ce résultat vous semble correct ?**")
+            col_up, col_down = st.columns(2)
+            with col_up:
+                if st.button("👍", use_container_width=True, key="feedback_good"):
+                    sheet2.update_cell(st.session_state["row_index"], 7, "good")
+                    st.session_state["feedback_given"] = True
+                    st.rerun()
+            with col_down:
+                if st.button("👎", use_container_width=True, key="feedback_bad"):
+                    sheet2.update_cell(st.session_state["row_index"], 7, "bad")
+                    st.session_state["feedback_given"] = True
+                    st.rerun()
+        else:
+            st.success("Merci pour votre retour !")
 
 # ── TABS ─────────────────────────────────────────────────────
 tab_url, tab_text, tab_jeu, tab_quizz = st.tabs([
@@ -133,11 +190,15 @@ with tab_url:
             st.session_state["elapsed"] = 0
             st.session_state["feedback_given"] = False
             st.session_state["row_index"] = None
+            st.session_state["source_tab"] = None
             st.session_state["show_cleared"] = True
             st.rerun()
     if st.session_state.get("show_cleared"):
         st.success("🗑️ Champs effacés")
         st.session_state["show_cleared"] = False
+
+    if st.session_state["source_tab"] == "url":
+        display_result()
 
 with tab_text:
     text_input = st.text_area(
@@ -159,54 +220,31 @@ with tab_text:
             st.session_state["elapsed"] = 0
             st.session_state["feedback_given"] = False
             st.session_state["row_index"] = None
+            st.session_state["source_tab"] = None
             st.session_state["show_cleared"] = True
             st.rerun()
     if st.session_state.get("show_cleared"):
         st.success("🗑️ Champs effacés")
         st.session_state["show_cleared"] = False
 
+    if st.session_state["source_tab"] == "text":
+        display_result()
+
 with tab_jeu:
     if sheet is None:
         st.warning("⚠️ Google Sheets non configuré.")
     else:
-        menu = st.radio("Choisir une action", ["Ajouter une news", "Voir les news"])
-
         def add_news(title, content, label):
             sheet.append_row([title, content, label, "pending"])
 
-        def delete_news(title):
-            rows = sheet.get_all_records()
-            for i, row in enumerate(rows, start=2):
-                if row["title"] == title:
-                    sheet.delete_rows(i)
-                    break
-
-        df = load_data(sheet)
-
-        if menu == "Ajouter une news":
-            title = st.text_input("Titre")
-            content = st.text_area("Contenu")
-            label = st.selectbox("Type", ["fake", "real"])
-            if st.button("Ajouter"):
-                add_news(title, content, label)
-                st.success("Ajouté à Google Sheets ✅")
-                st.rerun()
-
-        elif menu == "Voir les news":
-            if len(df) > 0:
-                st.dataframe(df)
-                selected = st.selectbox("Valider une news", [row["title"] for row in df])
-                if st.button("Valider"):
-                    for i, row in enumerate(sheet.get_all_records(), start=2):
-                        if row["title"] == selected:
-                            sheet.update_cell(i, 4, "valide")
-                            break
-                    st.success("News validée ✅")
-                selected_del = st.selectbox("Supprimer une news", [row["title"] for row in df])
-                if st.button("🗑️ Supprimer"):
-                    delete_news(selected_del)
-                    st.success("News supprimée ✅")
-                    st.rerun()
+        st.subheader("Ajouter une news")
+        title = st.text_input("Titre")
+        content = st.text_area("Contenu")
+        label = st.selectbox("Type", ["fake", "real"])
+        if st.button("Ajouter"):
+            add_news(title, content, label)
+            st.success("Ajouté à Google Sheets ✅")
+            st.rerun()
 
 with tab_quizz:
 
@@ -223,7 +261,6 @@ with tab_quizz:
                     facts[row["content"]] = False
         return facts
 
-    # stocker les questions en session_state pour éviter le re-sample
     if "quiz_facts" not in st.session_state:
         all_facts = load_facts()
         st.session_state["quiz_facts"] = dict(random.sample(list(all_facts.items()), min(10, len(all_facts)))) if all_facts else {}
@@ -241,13 +278,11 @@ with tab_quizz:
     else:
         for i, (fact, answer) in enumerate(facts.items(), 1):
             st.write(f"**{i}. {fact}**")
-            col_vrai, col_faux, col_valider = st.columns([1, 1, 1])
+            col_vrai, col_faux, _ = st.columns([1, 1, 1])
             with col_vrai:
                 vrai = st.button("✅ Vrai", key=f"vrai_{i}", use_container_width=True)
             with col_faux:
                 faux = st.button("❌ Faux", key=f"faux_{i}", use_container_width=True)
-            with col_valider:
-                pass  # placeholder pour aligner
 
             if (vrai or faux) and i not in st.session_state.answered:
                 user_bool = vrai
@@ -273,6 +308,11 @@ analyze = st.session_state.get("analyze_url") or st.session_state.get("analyze_t
 if analyze:
     st.session_state["feedback_given"] = False
     st.session_state["row_index"] = None
+
+    if st.session_state.get("analyze_url"):
+        st.session_state["source_tab"] = "url"
+    else:
+        st.session_state["source_tab"] = "text"
 
     if url_input:
         source = "streamlit_url"
@@ -323,60 +363,6 @@ if analyze:
             except Exception as e:
                 st.error(f"❌ Erreur API : {e}")
                 st.stop()
-
-# ── RÉSULTAT ─────────────────────────────────────────────────
-if st.session_state["result"]:
-    result = st.session_state["result"]
-    text_to_analyze = st.session_state["text_to_analyze"]
-    elapsed = st.session_state["elapsed"]
-
-    st.divider()
-    st.subheader("Résultat")
-
-    if result["Verdict"] == "FAKE":
-        st.markdown(f'<div class="verdict-fake"><span style="font-size: 2rem;">🚨 FAKE NEWS</span><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
-        if result["Indice de confiance"] >= 0.92:
-            if st.button("🔍 Chercher des sources vérifiées", use_container_width=True):
-                with st.spinner("Recherche de sources en cours..."):
-                    try:
-                        response_fc = requests.post(
-                            f"{API_URL}/fact_check",
-                            json={"text_to_analyze": text_to_analyze, "row_index": st.session_state["row_index"]},
-                            timeout=60,
-                        )
-                        response_fc.raise_for_status()
-                        result_fc = response_fc.json()
-                        st.markdown(result_fc["result"])
-                    except Exception as e:
-                        st.error(f"❌ Erreur fact-check : {e}")
-
-    elif result["Verdict"] == "REAL":
-        st.markdown(f'<div class="verdict-real"><span style="font-size: 2rem;">✅ ARTICLE FIABLE</span><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
-
-    else:
-        label_hint = "Relativement fiable" if result["Label"] == "REAL" else "Relativement fake"
-        st.markdown(f'<div class="verdict-inconclusive"><span style="font-size: 2rem;">⚠️ NON CONCLUANT</span><br>{label_hint}<br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
-
-    st.caption(f"⏱️ Analyse effectuée en {elapsed}s")
-
-    # ── FEEDBACK ─────────────────────────────────────────────
-    if sheet2 and st.session_state["row_index"]:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if not st.session_state["feedback_given"]:
-            st.markdown("**Ce résultat vous semble correct ?**")
-            col_up, col_down = st.columns(2)
-            with col_up:
-                if st.button("👍", use_container_width=True, key="feedback_good"):
-                    sheet2.update_cell(st.session_state["row_index"], 7, "good")
-                    st.session_state["feedback_given"] = True
-                    st.rerun()
-            with col_down:
-                if st.button("👎", use_container_width=True, key="feedback_bad"):
-                    sheet2.update_cell(st.session_state["row_index"], 7, "bad")
-                    st.session_state["feedback_given"] = True
-                    st.rerun()
-        else:
-            st.success("Merci pour votre retour !")
 
 # ── FOOTER ───────────────────────────────────────────────────
 st.divider()
