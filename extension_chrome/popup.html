@@ -3,27 +3,38 @@
   <head>
     <meta charset="utf-8">
     <style>
-      body { width: 280px; height: 350px;background-color: #0e1117; color: white; }
-      h2 {text-align: center;}
-      h4 {text-align: center; color: #848588}
-      h3 {text-align: center;}
+      body { width: 280px; height: 350px; background-color: #0e1117; color: white; }
+      h2 { text-align: center; }
+      h4 { text-align: center; color: #848588; }
+      h3 { text-align: center; }
       .verdict-fake { background-color: #ff4b4b22; border: 1px solid #ff4b4b; border-radius: 8px; padding: 16px; text-align: center; color: #ff4b4b; }
       .verdict-real { background-color: #21c35422; border: 1px solid #21c354; border-radius: 8px; padding: 16px; text-align: center; color: #21c354; }
       .verdict-inconclusive { background-color: #ffd70022; border: 1px solid #ffd700; border-radius: 8px; padding: 16px; text-align: center; color: #ffd700; }
       .verdict-error { background-color: #84858822; border: 1px solid #848588; border-radius: 8px; padding: 16px; text-align: center; color: white; }
       #result { text-align: center; font-size: 1.4rem; font-weight: bold; }
       button { display: block; margin: auto; background-color: #ff4b4b; color: white; border: none; border-radius: 6px; padding: 10px 20px; cursor: pointer; font-size: 1rem; }
+      .feedback-btn { display: inline-block; margin: 0 6px; font-size: 1.2rem; padding: 8px 16px; border-radius: 6px; cursor: pointer; border: none; color: white; }
     </style>
   </head>
   <body>
     <h2>📰 Fake News Detector 📰</h2>
     <h4>Détection et catégorisation de Fake News</h4>
-    <br></br>
+    <br>
     <button id="analyzeBtn">🔍 Lancer l'analyse</button>
-    <br></br>
+    <br>
     <h3 id="resultTitle" style="display:none">Résultat :</h3>
     <p id="loadingMsg" style="display:none; text-align:center; color:#848588;">Analyse en cours...</p>
     <div id="result"></div>
+
+    <div id="feedback" style="display:none; text-align:center; margin-top:12px;">
+      <p style="color:#848588; font-size:0.85rem; margin-bottom:6px;">Ce résultat vous semble correct ?</p>
+      <div style="display:flex; justify-content:center; gap:12px;">
+        <button id="feedbackGood" class="feedback-btn" style="background-color:#21c354;">👍</button>
+        <button id="feedbackBad" class="feedback-btn" style="background-color:#ff4b4b;">👎</button>
+      </div>
+    </div>
+    <p id="feedbackDone" style="display:none; text-align:center; color:#21c354; font-size:0.85rem; margin-top:8px;">Merci pour votre retour !</p>
+
     <script src="content.js"></script>
     <p style="text-align: center; color: #848588; font-size: 0.75rem; font-weight: bold; position: absolute; bottom: 8px; width: 100%;">Le Wagon - #2251</p>
   </body>
