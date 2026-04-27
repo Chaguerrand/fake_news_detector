@@ -52,6 +52,7 @@ with tab_quizz:
         if sheet is None:
             return []
         data = load_data(sheet)
+        st.write(load_data(sheet)[0] if sheet else {})
         facts = []
         for row in data:
             if row["status"] == "valide" and row["label"] in ("real", "fake"):
