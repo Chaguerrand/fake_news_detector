@@ -40,8 +40,6 @@ if "feedback_given" not in st.session_state:
     st.session_state["feedback_given"] = False
 if "row_index" not in st.session_state:
     st.session_state["row_index"] = None
-if "source_tab" not in st.session_state:
-    st.session_state["source_tab"] = None
 
 API_URL = os.getenv("FASTAPI_URL", "http://localhost:8000")
 API_READY = True
@@ -94,10 +92,129 @@ st.title("📰 Fake News Detector 📰")
 st.caption("Détection et catégorisation de Fake News")
 st.divider()
 
-# ── FONCTION RÉSULTAT ────────────────────────────────────────
-def display_result():
-    if not st.session_state["result"]:
-        return
+# ── TABS ─────────────────────────────────────────────────────
+tab_url, tab_text = st.tabs([
+    "Analyser depuis une URL",
+    "Analyser depuis du texte brut",
+])
+
+with tab_url:
+    col_url, col_open = st.columns([5, 1])
+    with col_url:
+        url_input = st.text_input(
+            "URL de l'article",
+            placeholder="https://www.reuters.com/...",
+            key=f"url_input_{st.session_state['url_count']}",
+        )
+    with col_open:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if url_input:
+            st.link_button("🔗 Ouvrir", url_input, use_container_width=True)
+        else:
+            st.button("🔗 Ouvrir", disabled=True, use_container_width=True)
+    st.divider()
+    col_btn, col_clear = st.columns([5, 1])
+    with col_btn:
+        st.button("🔍 Lancer l'analyse", type="primary", use_container_width=True, key="analyze_url")
+    with col_clear:
+        if st.button("🗑️ Effacer", use_container_width=True, key="clear_url"):
+            st.session_state["url_count"] += 1
+            st.session_state["clear_count"] += 1
+            st.session_state["result"] = None
+            st.session_state["text_to_analyze"] = ""
+            st.session_state["elapsed"] = 0
+            st.session_state["feedback_given"] = False
+            st.session_state["row_index"] = None
+            st.session_state["show_cleared"] = True
+            st.rerun()
+    if st.session_state.get("show_cleared"):
+        st.success("🗑️ Champs effacés")
+        st.session_state["show_cleared"] = False
+
+with tab_text:
+    text_input = st.text_area(
+        "Collez ici le contenu de l'article",
+        height=200,
+        placeholder="Entrez le texte de l'article à analyser...",
+        key=f"input_text_{st.session_state['clear_count']}",
+    )
+    st.divider()
+    col_btn, col_clear = st.columns([5, 1])
+    with col_btn:
+        st.button("🔍 Lancer l'analyse", type="primary", use_container_width=True, key="analyze_text")
+    with col_clear:
+        if st.button("🗑️ Effacer", use_container_width=True, key="clear_text"):
+            st.session_state["url_count"] += 1
+            st.session_state["clear_count"] += 1
+            st.session_state["result"] = None
+            st.session_state["text_to_analyze"] = ""
+            st.session_state["elapsed"] = 0
+            st.session_state["feedback_given"] = False
+            st.session_state["row_index"] = None
+            st.session_state["show_cleared"] = True
+            st.rerun()
+    if st.session_state.get("show_cleared"):
+        st.success("🗑️ Champs effacés")
+        st.session_state["show_cleared"] = False
+
+# ── ANALYSE ──────────────────────────────────────────────────
+analyze = st.session_state.get("analyze_url") or st.session_state.get("analyze_text")
+
+if analyze:
+    st.session_state["feedback_given"] = False
+    st.session_state["row_index"] = None
+
+    if url_input:
+        source = "streamlit_url"
+        with st.spinner("Extraction en cours..."):
+            try:
+                response_url = requests.get(
+                    url_input,
+                    headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+                )
+                soup = BeautifulSoup(response_url.content, "lxml")
+                text_to_analyze = " ".join([p.text for p in soup.find_all("p")])
+                st.success(f"Le texte analysé fait {len(text_to_analyze)} caractères")
+            except Exception as e:
+                st.error(f"❌ Impossible d'extraire le texte : {e}")
+                st.stop()
+
+    elif text_input:
+        source = "streamlit_txt"
+        text_to_analyze = text_input
+        st.success(f"Le texte analysé fait {len(text_to_analyze)} caractères")
+
+    else:
+        st.error("❌ Aucun texte à analyser. Collez du texte ou entrez une URL.")
+        st.stop()
+
+    if len(text_to_analyze.strip()) < 200:
+        st.error("❌ Texte trop court. Veuillez saisir au moins 200 caractères.")
+        st.stop()
+
+    with st.spinner("Analyse en cours..."):
+        try:
+            start = time.time()
+            response = requests.post(
+                f"{API_URL}/predict",
+                json={"text_to_analyze": text_to_analyze, "source": source},
+                timeout=60,
+            )
+            response.raise_for_status()
+            data = response.json()
+            st.session_state["result"] = data
+            st.session_state["text_to_analyze"] = text_to_analyze
+            st.session_state["elapsed"] = round(time.time() - start, 2)
+            st.session_state["row_index"] = data.get("row_index")
+        except requests.exceptions.ConnectionError:
+            st.error(f"❌ API non joignable sur {API_URL}")
+            st.stop()
+        except Exception as e:
+            st.error(f"❌ Erreur API : {e}")
+            st.stop()
+
+# ── RÉSULTAT ─────────────────────────────────────────────────
+if st.session_state["result"]:
     result = st.session_state["result"]
     text_to_analyze = st.session_state["text_to_analyze"]
     elapsed = st.session_state["elapsed"]
@@ -148,141 +265,6 @@ def display_result():
                     st.rerun()
         else:
             st.success("Merci pour votre retour !")
-
-# ── TABS ─────────────────────────────────────────────────────
-tab_url, tab_text = st.tabs([
-    "Analyser depuis une URL",
-    "Analyser depuis du texte brut",
-])
-
-with tab_url:
-    col_url, col_open = st.columns([5, 1])
-    with col_url:
-        url_input = st.text_input(
-            "URL de l'article",
-            placeholder="https://www.reuters.com/...",
-            key=f"url_input_{st.session_state['url_count']}",
-        )
-    with col_open:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if url_input:
-            st.link_button("🔗 Ouvrir", url_input, use_container_width=True)
-        else:
-            st.button("🔗 Ouvrir", disabled=True, use_container_width=True)
-    st.divider()
-    col_btn, col_clear = st.columns([5, 1])
-    with col_btn:
-        st.button("🔍 Lancer l'analyse", type="primary", use_container_width=True, key="analyze_url")
-    with col_clear:
-        if st.button("🗑️ Effacer", use_container_width=True, key="clear_url"):
-            st.session_state["clear_count"] += 1
-            st.session_state["url_count"] += 1
-            st.session_state["result"] = None
-            st.session_state["text_to_analyze"] = ""
-            st.session_state["elapsed"] = 0
-            st.session_state["feedback_given"] = False
-            st.session_state["row_index"] = None
-            st.session_state["source_tab"] = None
-            st.session_state["show_cleared"] = True
-            st.rerun()
-    if st.session_state.get("show_cleared"):
-        st.success("🗑️ Champs effacés")
-        st.session_state["show_cleared"] = False
-
-    if st.session_state["source_tab"] == "url":
-        display_result()
-
-with tab_text:
-    text_input = st.text_area(
-        "Collez ici le contenu de l'article",
-        height=200,
-        placeholder="Entrez le texte de l'article à analyser...",
-        key=f"input_text_{st.session_state['clear_count']}",
-    )
-    st.divider()
-    col_btn, col_clear = st.columns([5, 1])
-    with col_btn:
-        st.button("🔍 Lancer l'analyse", type="primary", use_container_width=True, key="analyze_text")
-    with col_clear:
-        if st.button("🗑️ Effacer", use_container_width=True, key="clear_text"):
-            st.session_state["clear_count"] += 1
-            st.session_state["url_count"] += 1
-            st.session_state["result"] = None
-            st.session_state["text_to_analyze"] = ""
-            st.session_state["elapsed"] = 0
-            st.session_state["feedback_given"] = False
-            st.session_state["row_index"] = None
-            st.session_state["source_tab"] = None
-            st.session_state["show_cleared"] = True
-            st.rerun()
-    if st.session_state.get("show_cleared"):
-        st.success("🗑️ Champs effacés")
-        st.session_state["show_cleared"] = False
-
-    if st.session_state["source_tab"] == "text":
-        display_result()
-
-# ── ANALYSE ──────────────────────────────────────────────────
-analyze = st.session_state.get("analyze_url") or st.session_state.get("analyze_text")
-
-if analyze:
-    st.session_state["feedback_given"] = False
-    st.session_state["row_index"] = None
-
-    if st.session_state.get("analyze_url"):
-        st.session_state["source_tab"] = "url"
-    else:
-        st.session_state["source_tab"] = "text"
-
-    if url_input:
-        source = "streamlit_url"
-        with st.spinner("Extraction en cours..."):
-            try:
-                response_url = requests.get(
-                    url_input,
-                    headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-                )
-                soup = BeautifulSoup(response_url.content, "lxml")
-                text_to_analyze = " ".join([p.text for p in soup.find_all("p")])
-                st.success(f"Le texte analysé fait {len(text_to_analyze)} caractères")
-            except Exception as e:
-                st.error(f"❌ Impossible d'extraire le texte : {e}")
-                st.stop()
-
-    elif text_input:
-        source = "streamlit_txt"
-        text_to_analyze = text_input
-        st.success(f"Le texte analysé fait {len(text_to_analyze)} caractères")
-
-    else:
-        st.error("❌ Aucun texte à analyser. Collez du texte ou entrez une URL.")
-        st.stop()
-
-    if len(text_to_analyze.strip()) < 200:
-        st.error("❌ Texte trop court. Veuillez saisir au moins 200 caractères.")
-        st.stop()
-
-    with st.spinner("Analyse en cours..."):
-        if API_READY:
-            try:
-                start = time.time()
-                response = requests.post(
-                    f"{API_URL}/predict",
-                    json={"text_to_analyze": text_to_analyze, "source": source},
-                    timeout=60,
-                )
-                response.raise_for_status()
-                data = response.json()
-                st.session_state["result"] = data
-                st.session_state["text_to_analyze"] = text_to_analyze
-                st.session_state["elapsed"] = round(time.time() - start, 2)
-                st.session_state["row_index"] = data.get("row_index")
-            except requests.exceptions.ConnectionError:
-                st.error(f"❌ API non joignable sur {API_URL}")
-                st.stop()
-            except Exception as e:
-                st.error(f"❌ Erreur API : {e}")
-                st.stop()
 
 # ── FOOTER ───────────────────────────────────────────────────
 st.divider()
