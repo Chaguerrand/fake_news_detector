@@ -241,16 +241,22 @@ with tab_quizz:
     else:
         for i, (fact, answer) in enumerate(facts.items(), 1):
             st.write(f"**{i}. {fact}**")
-            user_choice = st.radio("Votre réponse :", ["Vrai", "Faux"], key=f"quiz_{i}")
-            if st.button("Valider", key=f"btn_{i}"):
-                user_bool = user_choice == "Vrai"
-                if i not in st.session_state.answered:
-                    if user_bool == answer:
-                        st.success("✅ Correct")
-                        st.session_state.score += 1
-                    else:
-                        st.error("❌ Faux")
-                    st.session_state.answered[i] = True
+            col_vrai, col_faux, col_valider = st.columns([1, 1, 1])
+            with col_vrai:
+                vrai = st.button("✅ Vrai", key=f"vrai_{i}", use_container_width=True)
+            with col_faux:
+                faux = st.button("❌ Faux", key=f"faux_{i}", use_container_width=True)
+            with col_valider:
+                pass  # placeholder pour aligner
+
+            if (vrai or faux) and i not in st.session_state.answered:
+                user_bool = vrai
+                if user_bool == answer:
+                    st.success("✅ Correct")
+                    st.session_state.score += 1
+                else:
+                    st.error("❌ Faux")
+                st.session_state.answered[i] = True
 
         st.write(f"🏁 Score final : {st.session_state.score}/{len(facts)}")
 
