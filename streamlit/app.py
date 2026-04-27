@@ -243,7 +243,7 @@ if st.session_state["result"]:
                     )
                     response_fc.raise_for_status()
                     result_fc = response_fc.json()
-                    formatted = result_fc["result"].replace("\n", "\n\n")
+                    formatted = "\n\n".join(line.lstrip() for line in result_fc["result"].split("\n"))
                     st.markdown(formatted)
                     st.divider()
                     st.markdown("""
