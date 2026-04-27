@@ -67,10 +67,10 @@ with col_left:
 with col_right:
     st.subheader("📊 Petit jeu d'Alex le platiste")
 
-# ── LIGNE 2 : KPIs + PIE | KPIs + VALIDATION ────────────────
-col_kpi_h, col_pie_h, col_kpi_n, col_action_n = st.columns([1, 2, 1, 2])
+# ── LIGNE 2 : KPIs + KPIs + PIE | KPIs + VALIDATION ─────────
+col_kpi_h1, col_kpi_h2, col_pie_h, col_kpi_n, col_action_n = st.columns([1, 1, 1, 1, 2])
 
-with col_kpi_h:
+with col_kpi_h1:
     if not df_history.empty:
         total = len(df_history)
         pct_fake = len(df_history[df_history["verdict"] == "FAKE"]) / total * 100
@@ -82,6 +82,17 @@ with col_kpi_h:
         st.metric("Confiance moyenne", f"{conf_moyenne:.1f}%")
     else:
         st.info("Aucune analyse.")
+
+with col_kpi_h2:
+    if not df_history.empty:
+        total_feedbacks = df_history["feedback"].replace("", pd.NA).dropna().shape[0]
+        sans_feedbacks = df_history["feedback"].replace("", pd.NA).isna().sum()
+        pct_positifs = (len(df_history[df_history["feedback"] == "good"]) / total_feedbacks * 100) if total_feedbacks > 0 else 0
+        fact_checks = df_history["fact_check"].apply(lambda x: str(x).upper() == "TRUE").sum()
+        st.metric("Total feedbacks", total_feedbacks)
+        st.metric("Sans feedback", sans_feedbacks)
+        st.metric("% positifs", f"{pct_positifs:.1f}%")
+        st.metric("Fact checks", fact_checks)
 
 with col_pie_h:
     if not df_history.empty:
@@ -149,20 +160,34 @@ col_left, col_right = st.columns(2)
 
 with col_left:
     st.subheader("Historique")
-    col_fh1, col_fh2 = st.columns(2)
+    col_fh1, col_fh2, col_fh3, col_fh4 = st.columns(4)
     with col_fh1:
         filter_verdict = st.selectbox("Verdict", ["Tous", "FAKE", "REAL", "NON CONCLUANT"], key="filter_verdict")
     with col_fh2:
         sources = ["Tous"] + sorted(df_history["source"].dropna().unique().tolist()) if not df_history.empty else ["Tous"]
         filter_source = st.selectbox("Source", sources, key="filter_source")
+    with col_fh3:
+        filter_feedback = st.selectbox("Feedback", ["Tous", "good", "bad", "Sans feedback"], key="filter_feedback")
+    with col_fh4:
+        filter_factcheck = st.selectbox("Fact check", ["Tous", "True", "False"], key="filter_factcheck")
 
     filtered_history = df_history.copy()
     if filter_verdict != "Tous":
         filtered_history = filtered_history[filtered_history["verdict"] == filter_verdict]
     if filter_source != "Tous":
         filtered_history = filtered_history[filtered_history["source"] == filter_source]
+    if filter_feedback == "Sans feedback":
+        filtered_history = filtered_history[filtered_history["feedback"].replace("", pd.NA).isna()]
+    elif filter_feedback != "Tous":
+        filtered_history = filtered_history[filtered_history["feedback"] == filter_feedback]
+    if filter_factcheck != "Tous":
+        filtered_history = filtered_history[
+            filtered_history["fact_check"].apply(lambda x: str(x).upper() == "TRUE") == (filter_factcheck == "True")
+        ]
 
-    st.dataframe(filtered_history, use_container_width=True, height=300)
+    col_width = 150
+    column_config = {col: st.column_config.Column(width=col_width) for col in filtered_history.columns}
+    st.dataframe(filtered_history, use_container_width=True, height=300, column_config=column_config)
 
 with col_right:
     st.subheader("News")
