@@ -220,45 +220,45 @@ if st.session_state["result"]:
     elapsed = st.session_state["elapsed"]
 
     st.divider()
-    st.subheader("Résultat")
 
     if result["Verdict"] == "FAKE":
         st.markdown(f'<div class="verdict-fake"><span style="font-size: 2rem;">🚨 FAKE NEWS</span><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
-        if result["Indice de confiance"] >= 0.92:
-            if st.button("🔍 Chercher des sources vérifiées", use_container_width=True):
-                with st.spinner("Recherche de sources en cours..."):
-                    try:
-                        response_fc = requests.post(
-                            f"{API_URL}/fact_check",
-                            json={"text_to_analyze": text_to_analyze, "row_index": st.session_state["row_index"]},
-                            timeout=60,
-                        )
-                        response_fc.raise_for_status()
-                        result_fc = response_fc.json()
-                        st.markdown(result_fc["result"])
-                        st.divider()
-                        st.markdown("""
-                        <div style="font-size: 0.85rem; color: #aaa; border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
-                        <strong>Légende :</strong><br>
-                        🔵 <strong>FACTUEL</strong> : claim vérifiable par des faits<br>
-                        🟣 <strong>INTERPRÉTATIF</strong> : claim subjectif ou ambigu<br>
-                        ✅ <strong>CONFIRMÉ</strong> : les sources valident le claim<br>
-                        ❌ <strong>CONTREDIT</strong> : les sources réfutent le claim<br>
-                        ⚪ <strong>NON ÉTABLI</strong> : aucune source fiable ne permet de trancher<br>
-                        ⚠️ <strong>TROMPEUR</strong> : le claim est factuellement incomplet ou décontextualisé
-                        </div>
-                        """, unsafe_allow_html=True)
-                    except Exception as e:
-                        st.error(f"❌ Erreur fact-check : {e}")
-
     elif result["Verdict"] == "REAL":
         st.markdown(f'<div class="verdict-real"><span style="font-size: 2rem;">✅ ARTICLE FIABLE</span><br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
-
     else:
         label_hint = "Relativement fiable" if result["Label"] == "REAL" else "Relativement fake"
         st.markdown(f'<div class="verdict-inconclusive"><span style="font-size: 2rem;">⚠️ NON CONCLUANT</span><br>{label_hint}<br>{result["Indice de confiance"]:.1%}</div>', unsafe_allow_html=True)
 
     st.caption(f"⏱️ Analyse effectuée en {elapsed}s")
+
+    if result["Verdict"] == "FAKE" and result["Indice de confiance"] >= 0.92:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🔍 Chercher des sources vérifiées", type="primary", use_container_width=True):
+            with st.spinner("Recherche de sources en cours..."):
+                try:
+                    response_fc = requests.post(
+                        f"{API_URL}/fact_check",
+                        json={"text_to_analyze": text_to_analyze, "row_index": st.session_state["row_index"]},
+                        timeout=60,
+                    )
+                    response_fc.raise_for_status()
+                    result_fc = response_fc.json()
+                    formatted = result_fc["result"].replace("\n", "\n\n")
+                    st.markdown(formatted)
+                    st.divider()
+                    st.markdown("""
+<div style="font-size: 0.85rem; color: #aaa; padding-top: 4px;">
+<strong>Légende :</strong><br>
+🔵 <strong>FACTUEL</strong> : claim vérifiable par des faits<br>
+🟣 <strong>INTERPRÉTATIF</strong> : claim subjectif ou ambigu<br>
+✅ <strong>CONFIRMÉ</strong> : les sources valident le claim<br>
+❌ <strong>CONTREDIT</strong> : les sources réfutent le claim<br>
+⚪ <strong>NON ÉTABLI</strong> : aucune source fiable ne permet de trancher<br>
+⚠️ <strong>TROMPEUR</strong> : le claim est factuellement incomplet ou décontextualisé
+</div>
+""", unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"❌ Erreur fact-check : {e}")
 
     if sheet2 and st.session_state["row_index"]:
         st.markdown("<br>", unsafe_allow_html=True)
