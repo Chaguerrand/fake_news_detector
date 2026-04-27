@@ -5,6 +5,7 @@ import time
 from bs4 import BeautifulSoup
 import gspread
 from google.oauth2.service_account import Credentials
+<<<<<<< HEAD
 
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -18,6 +19,25 @@ creds = Credentials.from_service_account_file(
 
 client = gspread.authorize(creds)
 sheet = client.open("FakeNewsDB").sheet1
+=======
+import json
+from dotenv import load_dotenv
+
+load_dotenv()
+
+scope = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"]
+
+gcp_creds = os.getenv("GCP_SERVICE_ACCOUNT")
+if gcp_creds:
+    creds_json = json.loads(gcp_creds)
+    creds = Credentials.from_service_account_info(creds_json, scopes=scope)
+    client = gspread.authorize(creds)
+    sheet = client.open("FakeNewsDB").sheet1
+else:
+    sheet = None
+>>>>>>> ff09da04bcd49256198fb792355aaa6dc5dad587
 
 
 if "url_count" not in st.session_state:
@@ -109,6 +129,22 @@ with tab_url:
             st.link_button("🔗 Ouvrir", url_input, use_container_width=True)
         else:
             st.button("🔗 Ouvrir", disabled=True, use_container_width=True)
+    st.divider()
+    col_btn, col_clear = st.columns([5, 1])
+    with col_btn:
+        st.button("🔍 Lancer l'analyse", type="primary", use_container_width=True, key="analyze_url")
+    with col_clear:
+        if st.button("🗑️ Effacer", use_container_width=True, key="clear_url"):
+            st.session_state["clear_count"] += 1
+            st.session_state["url_count"] += 1
+            st.session_state["result"] = None
+            st.session_state["text_to_analyze"] = ""
+            st.session_state["elapsed"] = 0
+            st.session_state["show_cleared"] = True
+            st.rerun()
+    if st.session_state.get("show_cleared"):
+        st.success("🗑️ Champs effacés")
+        st.session_state["show_cleared"] = False
 
 with tab_text:
 
@@ -118,7 +154,24 @@ with tab_text:
         placeholder="Entrez le texte de l'article à analyser...",
         key=f"input_text_{st.session_state['clear_count']}",
     )
+    st.divider()
+    col_btn, col_clear = st.columns([5, 1])
+    with col_btn:
+        st.button("🔍 Lancer l'analyse", type="primary", use_container_width=True, key="analyze_text")
+    with col_clear:
+        if st.button("🗑️ Effacer", use_container_width=True, key="clear_text"):
+            st.session_state["clear_count"] += 1
+            st.session_state["url_count"] += 1
+            st.session_state["result"] = None
+            st.session_state["text_to_analyze"] = ""
+            st.session_state["elapsed"] = 0
+            st.session_state["show_cleared"] = True
+            st.rerun()
+    if st.session_state.get("show_cleared"):
+        st.success("🗑️ Champs effacés")
+        st.session_state["show_cleared"] = False
 
+<<<<<<< HEAD
     analyze_text = st.button(
         "🔍 Lancer l'analyse",
         type="primary",
@@ -183,6 +236,70 @@ with tab_jeu:
 
 analyze = analyze_url or analyze_text
 
+=======
+with tab_jeu:
+
+    if sheet is None:
+        st.warning("⚠️ Google Sheets non configuré.")
+    else:
+        menu = st.radio("Choisir une action", ["Ajouter une news", "Voir les news"])
+
+        @st.cache_data(ttl=60)
+        def load_data(_sheet):
+            return _sheet.get_all_records()
+
+        def add_news(title, content, label):
+            sheet.append_row(["", title, content, label, "pending"])
+
+        def delete_news(title):
+            rows = sheet.get_all_records()
+            for i, row in enumerate(rows, start=2):
+                if row["title"] == title:
+                    sheet.delete_rows(i)
+                    break
+
+        df = load_data(sheet)
+
+        if menu == "Ajouter une news":
+            title = st.text_input("Titre")
+            content = st.text_area("Contenu")
+            label = st.selectbox("Type", ["fake", "real"])
+
+            if st.button("Ajouter"):
+                add_news(title, content, label)
+                st.success("Ajouté à Google Sheets ✅")
+                st.rerun()
+
+        elif menu == "Voir les news":
+            if len(df) > 0:
+                st.dataframe(df)
+
+                selected = st.selectbox(
+                    "Valider une news",
+                    [row["title"] for row in df]
+                )
+
+                if st.button("Valider"):
+                    for i, row in enumerate(sheet.get_all_records(), start=2):
+                        if row["title"] == selected:
+                            sheet.update_cell(i, 5, "valide")
+                            break
+                    st.success("News validée ✅")
+
+                selected_del = st.selectbox(
+                    "Supprimer une news",
+                    [row["title"] for row in df]
+                )
+
+                if st.button("🗑️ Supprimer"):
+                    delete_news(selected_del)
+                    st.success("News supprimée ✅")
+                    st.rerun()
+
+# analyse
+analyze = st.session_state.get("analyze_url") or st.session_state.get("analyze_text")
+
+>>>>>>> ff09da04bcd49256198fb792355aaa6dc5dad587
 if analyze:
 
     if analyze_url and analyze_text:

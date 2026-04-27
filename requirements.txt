@@ -1,5 +1,7 @@
 beautifulsoup4
 fastapi
+gspread
+google-auth
 httpx
 joblib
 kaggle

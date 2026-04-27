@@ -1,10 +1,14 @@
 .python-version
 .DS_Store
 raw_data/
-raw_data/*
 raw_data/WELFake_Dataset.csv
 __pycache__/
 *.pyc
 utils.py
 .env
 streamlit/service_account.json
+<<<<<<< HEAD
+=======
+.devcontainer
+docker-compose.yml
+>>>>>>> ff09da04bcd49256198fb792355aaa6dc5dad587
