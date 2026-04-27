@@ -12,3 +12,14 @@ logs:
 
 pip_req:
 	pip install -r requirements.txt
+
+setup_secrets:
+	gcloud secrets add-iam-policy-binding GCP_SERVICE_ACCOUNT \
+		--member="serviceAccount:210894584132-compute@developer.gserviceaccount.com" \
+		--role="roles/secretmanager.secretAccessor"
+	gcloud secrets add-iam-policy-binding GOOGLE_API_KEY \
+		--member="serviceAccount:210894584132-compute@developer.gserviceaccount.com" \
+		--role="roles/secretmanager.secretAccessor"
+	gcloud secrets add-iam-policy-binding TAVILY_API_KEY \
+		--member="serviceAccount:210894584132-compute@developer.gserviceaccount.com" \
+		--role="roles/secretmanager.secretAccessor"
