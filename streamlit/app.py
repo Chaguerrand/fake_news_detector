@@ -7,6 +7,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 import json
 from dotenv import load_dotenv
+import re
 
 load_dotenv()
 
@@ -243,8 +244,16 @@ if st.session_state["result"]:
                     )
                     response_fc.raise_for_status()
                     result_fc = response_fc.json()
-                    formatted = "\n\n".join(line.lstrip() for line in result_fc["result"].split("\n"))
-                    st.markdown(formatted)
+                    lines = [line.lstrip() for line in result_fc["result"].split("\n")]
+                    result_text = ""
+                    first_claim = True
+                    for line in lines:
+                        if re.match(r'^\d+\.', line):
+                            if not first_claim:
+                                result_text += '\n\n<hr style="border:none;border-top:1px solid #555;width:40%;margin:20px 0;">\n\n'
+                            first_claim = False
+                        result_text += line + "\n\n"
+                    st.markdown(result_text, unsafe_allow_html=True)
                     st.divider()
                     st.markdown("""
 <div style="font-size: 0.85rem; color: #aaa; padding-top: 4px;">
