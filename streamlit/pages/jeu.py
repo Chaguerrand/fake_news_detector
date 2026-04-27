@@ -50,20 +50,21 @@ with tab_quizz:
 
     def load_facts():
         if sheet is None:
-            return {}
+            return []
         data = load_data(sheet)
-        facts = {}
+        facts = []
         for row in data:
-            if row["status"] == "valide":
-                if row["label"] == "real":
-                    facts[row["content"]] = True
-                elif row["label"] == "fake":
-                    facts[row["content"]] = False
+            if row["status"] == "valide" and row["label"] in ("real", "fake"):
+                facts.append({
+                    "title": row["title"],
+                    "content": row["content"],
+                    "answer": row["label"] == "real"
+                })
         return facts
 
     if "quiz_facts" not in st.session_state:
         all_facts = load_facts()
-        st.session_state["quiz_facts"] = dict(random.sample(list(all_facts.items()), min(10, len(all_facts)))) if all_facts else {}
+        st.session_state["quiz_facts"] = random.sample(all_facts, min(10, len(all_facts))) if all_facts else []
     if "score" not in st.session_state:
         st.session_state.score = 0
     if "answered" not in st.session_state:
@@ -76,8 +77,9 @@ with tab_quizz:
     if not facts:
         st.warning("⚠️ Aucune news disponible pour le quiz.")
     else:
-        for i, (fact, answer) in enumerate(facts.items(), 1):
-            st.write(f"**{i}. {fact}**")
+        for i, item in enumerate(facts, 1):
+            st.markdown(f"**{i}. {item['title']}**")
+            st.caption(item["content"])
             col_vrai, col_faux, _ = st.columns([1, 1, 1])
             with col_vrai:
                 vrai = st.button("✅ Vrai", key=f"vrai_{i}", use_container_width=True)
@@ -86,7 +88,7 @@ with tab_quizz:
 
             if (vrai or faux) and i not in st.session_state.answered:
                 user_bool = vrai
-                if user_bool == answer:
+                if user_bool == item["answer"]:
                     st.success("✅ Correct")
                     st.session_state.score += 1
                 else:
@@ -97,7 +99,7 @@ with tab_quizz:
 
         if st.button("🔄 Nouveau quiz"):
             all_facts = load_facts()
-            st.session_state["quiz_facts"] = dict(random.sample(list(all_facts.items()), min(10, len(all_facts)))) if all_facts else {}
+            st.session_state["quiz_facts"] = random.sample(all_facts, min(10, len(all_facts))) if all_facts else []
             st.session_state.score = 0
             st.session_state.answered = {}
             st.rerun()
