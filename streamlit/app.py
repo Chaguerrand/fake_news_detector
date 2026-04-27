@@ -237,15 +237,17 @@ if st.session_state["result"]:
                         result_fc = response_fc.json()
                         st.markdown(result_fc["result"])
                         st.divider()
-                        st.markdown(
-    """**Légende :**
-    - **FACTUEL** : claim vérifiable par des faits
-    - **INTERPRÉTATIF** : claim subjectif ou ambigu
-    - **CONFIRMÉ** : les sources valident le claim
-    - **CONTREDIT** : les sources réfutent le claim
-    - **NON ÉTABLI** : aucune source fiable ne permet de trancher
-    - **TROMPEUR** : le claim est factuellement incomplet ou décontextualisé
-    """)
+                        st.markdown("""
+                        <div style="font-size: 0.85rem; color: #aaa; border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
+                        <strong>Légende :</strong><br>
+                        🔵 <strong>FACTUEL</strong> : claim vérifiable par des faits<br>
+                        🟣 <strong>INTERPRÉTATIF</strong> : claim subjectif ou ambigu<br>
+                        ✅ <strong>CONFIRMÉ</strong> : les sources valident le claim<br>
+                        ❌ <strong>CONTREDIT</strong> : les sources réfutent le claim<br>
+                        ⚪ <strong>NON ÉTABLI</strong> : aucune source fiable ne permet de trancher<br>
+                        ⚠️ <strong>TROMPEUR</strong> : le claim est factuellement incomplet ou décontextualisé
+                        </div>
+                        """, unsafe_allow_html=True)
                     except Exception as e:
                         st.error(f"❌ Erreur fact-check : {e}")
 
