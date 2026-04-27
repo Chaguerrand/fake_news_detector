@@ -133,8 +133,11 @@ def fact_check(request: FactCheckRequest):
         model="gemini-2.5-flash",
         google_api_key=os.getenv("GOOGLE_API_KEY"))
     search_tool = TavilySearchResults(max_results=5)
-    fact_checker = create_react_agent(llm, [search_tool], state_modifier=FACT_CHECK_PROMPT)
-    result = fact_checker.invoke({"messages": [("user", f"Classification ML : FAKE\n\nArticle : {request.text_to_analyze}")]})
+    fact_checker = create_react_agent(llm, [search_tool])
+    result = fact_checker.invoke({"messages": [
+        ("system", FACT_CHECK_PROMPT),
+        ("user", f"Classification ML : FAKE\n\nArticle : {request.text_to_analyze}")
+    ]})
 
     last_message = result["messages"][-1]
     if isinstance(last_message.content, list):
