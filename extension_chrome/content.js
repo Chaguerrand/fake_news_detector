@@ -14,6 +14,7 @@ document.getElementById("analyzeBtn").addEventListener("click", async () => {
   document.getElementById("loadingMsg").style.display = "block";
   document.getElementById("feedback").style.display = "none";
   document.getElementById("feedbackDone").style.display = "none";
+  document.getElementById("elapsed").style.display = "none";
   document.getElementById("result").className = "";
   document.getElementById("result").innerHTML = "";
 
@@ -43,10 +44,15 @@ document.getElementById("analyzeBtn").addEventListener("click", async () => {
     else if (data["Verdict"] === "REAL") { verdictText = "✅ ARTICLE FIABLE"; cssClass = "verdict-real"; }
     else { verdictText = "⚠️ NON CONCLUANT"; cssClass = "verdict-inconclusive"; }
 
+    const labelHint = data["Label"] === "REAL" ? "Relativement fiable" : "Relativement fake";
+    const hintText = data["Verdict"] === "NON CONCLUANT" ? `<br><small>${labelHint}</small>` : "";
+
     document.getElementById("loadingMsg").style.display = "none";
     document.getElementById("resultTitle").style.display = "block";
     document.getElementById("result").className = cssClass;
-    document.getElementById("result").innerHTML = verdictText + "<br>" + score + "<br><small>⏱️ " + elapsed + "s</small>";
+    document.getElementById("result").innerHTML = verdictText + "<br>" + score + hintText;
+    document.getElementById("elapsed").textContent = "⏱️ Analyse effectuée en " + elapsed + "s";
+    document.getElementById("elapsed").style.display = "block";
 
     // feedback
     const rowIndex = data["row_index"];
