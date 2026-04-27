@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import os
 import time
-import random
 from bs4 import BeautifulSoup
 import gspread
 from google.oauth2.service_account import Credentials
@@ -95,11 +94,6 @@ st.title("📰 Fake News Detector 📰")
 st.caption("Détection et catégorisation de Fake News")
 st.divider()
 
-# ── LOAD DATA ────────────────────────────────────────────────
-@st.cache_data(ttl=60)
-def load_data(_sheet):
-    return _sheet.get_all_records()
-
 # ── FONCTION RÉSULTAT ────────────────────────────────────────
 def display_result():
     if not st.session_state["result"]:
@@ -156,11 +150,9 @@ def display_result():
             st.success("Merci pour votre retour !")
 
 # ── TABS ─────────────────────────────────────────────────────
-tab_url, tab_text, tab_jeu, tab_quizz = st.tabs([
+tab_url, tab_text = st.tabs([
     "Analyser depuis une URL",
     "Analyser depuis du texte brut",
-    "Petit jeu d'Alex",
-    "Quizz pour un platiste"
 ])
 
 with tab_url:
@@ -229,78 +221,6 @@ with tab_text:
 
     if st.session_state["source_tab"] == "text":
         display_result()
-
-with tab_jeu:
-    if sheet is None:
-        st.warning("⚠️ Google Sheets non configuré.")
-    else:
-        def add_news(title, content, label):
-            sheet.append_row([title, content, label, "pending"])
-
-        st.subheader("Ajouter une news")
-        title = st.text_input("Titre")
-        content = st.text_area("Contenu")
-        label = st.selectbox("Type", ["fake", "real"])
-        if st.button("Ajouter"):
-            add_news(title, content, label)
-            st.success("Ajouté à Google Sheets ✅")
-            st.rerun()
-
-with tab_quizz:
-
-    def load_facts():
-        if sheet is None:
-            return {}
-        data = load_data(sheet)
-        facts = {}
-        for row in data:
-            if row["status"] == "valide":
-                if row["label"] == "real":
-                    facts[row["content"]] = True
-                elif row["label"] == "fake":
-                    facts[row["content"]] = False
-        return facts
-
-    if "quiz_facts" not in st.session_state:
-        all_facts = load_facts()
-        st.session_state["quiz_facts"] = dict(random.sample(list(all_facts.items()), min(10, len(all_facts)))) if all_facts else {}
-    if "score" not in st.session_state:
-        st.session_state.score = 0
-    if "answered" not in st.session_state:
-        st.session_state.answered = {}
-
-    facts = st.session_state["quiz_facts"]
-
-    st.subheader("Quiz Fake News")
-
-    if not facts:
-        st.warning("⚠️ Aucune news disponible pour le quiz.")
-    else:
-        for i, (fact, answer) in enumerate(facts.items(), 1):
-            st.write(f"**{i}. {fact}**")
-            col_vrai, col_faux, _ = st.columns([1, 1, 1])
-            with col_vrai:
-                vrai = st.button("✅ Vrai", key=f"vrai_{i}", use_container_width=True)
-            with col_faux:
-                faux = st.button("❌ Faux", key=f"faux_{i}", use_container_width=True)
-
-            if (vrai or faux) and i not in st.session_state.answered:
-                user_bool = vrai
-                if user_bool == answer:
-                    st.success("✅ Correct")
-                    st.session_state.score += 1
-                else:
-                    st.error("❌ Faux")
-                st.session_state.answered[i] = True
-
-        st.write(f"🏁 Score final : {st.session_state.score}/{len(facts)}")
-
-        if st.button("🔄 Nouveau quiz"):
-            all_facts = load_facts()
-            st.session_state["quiz_facts"] = dict(random.sample(list(all_facts.items()), min(10, len(all_facts)))) if all_facts else {}
-            st.session_state.score = 0
-            st.session_state.answered = {}
-            st.rerun()
 
 # ── ANALYSE ──────────────────────────────────────────────────
 analyze = st.session_state.get("analyze_url") or st.session_state.get("analyze_text")
