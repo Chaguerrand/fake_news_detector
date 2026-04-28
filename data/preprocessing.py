@@ -2,8 +2,7 @@ import re
 import string
 import os
 import json
-from google.cloud import translate_v2 as translate
-from google.oauth2.service_account import Credentials
+import requests as req
 
 def clean(text):
     text = text.strip().lower()
@@ -25,10 +24,9 @@ def data_clean():
 def translate_if_needed(text):
     if not text or len(text.strip()) < 10:
         return text
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("TRANSLATION_API_KEY")
     if not api_key:
         return text
-    import requests as req
     response = req.post(
         "https://translation.googleapis.com/language/translate/v2",
         params={"key": api_key},
