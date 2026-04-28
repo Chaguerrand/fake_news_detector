@@ -232,7 +232,7 @@ if st.session_state["result"]:
 
     st.caption(f"⏱️ Analyse effectuée en {elapsed}s")
 
-    if result["Verdict"] == "FAKE" and result["Indice de confiance"] >= 0.92:
+    if result["Verdict"] == "FAKE" and result["Indice de confiance"] >= 0.85:
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("🔍 Chercher des sources vérifiées", type="primary", use_container_width=True):
             with st.spinner("Recherche de sources en cours..."):
