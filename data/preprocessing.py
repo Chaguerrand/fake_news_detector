@@ -25,11 +25,14 @@ def data_clean():
 def translate_if_needed(text):
     if not text or len(text.strip()) < 10:
         return text
-    gcp_creds = os.getenv("GCP_SERVICE_ACCOUNT")
-    if not gcp_creds:
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
         return text
-    creds_json = json.loads(gcp_creds)
-    creds = Credentials.from_service_account_info(creds_json)
-    client = translate.Client(credentials=creds)
-    result = client.translate(text, target_language="en", source_language="fr")
-    return result["translatedText"]
+    import requests as req
+    response = req.post(
+        "https://translation.googleapis.com/language/translate/v2",
+        params={"key": api_key},
+        json={"q": text, "target": "en", "source": "fr", "format": "text"}
+    )
+    response.raise_for_status()
+    return response.json()["data"]["translations"][0]["translatedText"]
