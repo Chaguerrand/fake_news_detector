@@ -100,7 +100,6 @@ def predict(request: PredictRequest):
     else:
         translate = request.text_to_analyze
     model = app.state.model
-    translate = translate_if_needed(request.text_to_analyze, app.state.translator_model, app.state.translator_tokenizer)
     cleaned = clean(translate)
     proba = model.predict_proba([cleaned])[0]
     confidence = round(float(max(proba)), 4)
@@ -113,8 +112,7 @@ def predict(request: PredictRequest):
 # PREDICT CHROME
 @app.post("/predict_chrome")
 def predict_chrome(request: ChromeRequest):
-    if app.state.translator_model is None:
-        app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
+
     import requests as req
     from bs4 import BeautifulSoup
     response_url = req.get(request.url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"})
