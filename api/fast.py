@@ -49,6 +49,12 @@ with open("api/fact_check_prompt.txt", "r") as f:
 app.state.translator_model = None
 app.state.translator_tokenizer = None
 
+FRENCH_STOPWORDS = {"le", "la", "les", "de", "du", "des", "est", "en", "un", "une", "que", "qui", "pas", "je", "il"}
+
+def is_french(text: str) -> bool:
+    words = set(text.lower().split()[:100])
+    return len(words & FRENCH_STOPWORDS) >= 3
+
 # Google Sheets
 scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 gcp_creds = os.getenv("GCP_SERVICE_ACCOUNT")
@@ -87,8 +93,12 @@ def root():
 # PREDICT TF-IDF
 @app.post("/predict")
 def predict(request: PredictRequest):
-    if app.state.translator_model is None:
-        app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
+    if is_french(request.text_to_analyze):
+        if app.state.translator_model is None:
+            app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
+        translate = translate_if_needed(request.text_to_analyze, app.state.translator_model, app.state.translator_tokenizer)
+    else:
+        translate = request.text_to_analyze
     model = app.state.model
     translate = translate_if_needed(request.text_to_analyze, app.state.translator_model, app.state.translator_tokenizer)
     cleaned = clean(translate)
@@ -110,7 +120,12 @@ def predict_chrome(request: ChromeRequest):
     response_url = req.get(request.url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"})
     soup = BeautifulSoup(response_url.content, "lxml")
     text = " ".join([p.text for p in soup.find_all("p")])
-    translated = translate_if_needed(text, app.state.translator_model, app.state.translator_tokenizer)
+    if is_french(text):
+        if app.state.translator_model is None:
+            app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
+        translated = translate_if_needed(text, app.state.translator_model, app.state.translator_tokenizer)
+    else:
+        translated = text
     cleaned = clean(translated)
     proba = app.state.model.predict_proba([cleaned])[0]
     confidence = round(float(max(proba)), 4)
