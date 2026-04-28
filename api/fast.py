@@ -7,7 +7,7 @@ from google.oauth2.service_account import Credentials
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from data.preprocessing import clean, translate_if_needed, load_translate_model
+from data.preprocessing import clean, translate_if_needed
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.prebuilt import create_react_agent
@@ -46,9 +46,6 @@ with open(MODEL_PATH, "rb") as f:
 with open("api/fact_check_prompt.txt", "r") as f:
     FACT_CHECK_PROMPT = f.read()
 
-app.state.translator_model = None
-app.state.translator_tokenizer = None
-
 FRENCH_STOPWORDS = {"le", "la", "les", "de", "du", "des", "est", "en", "un", "une", "que", "qui", "pas", "je", "il"}
 
 def is_french(text: str) -> bool:
@@ -77,8 +74,8 @@ def log_analysis(url, text, verdict, confidence, source):
             verdict,
             confidence,
             source,
-            "",     # feedback vide
-            False   # fact_check
+            "",
+            False
         ])
         return len(sheet2.get_all_values())
     except Exception:
@@ -94,13 +91,11 @@ def root():
 @app.post("/predict")
 def predict(request: PredictRequest):
     if is_french(request.text_to_analyze):
-        if app.state.translator_model is None:
-            app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
-        translate = translate_if_needed(request.text_to_analyze, app.state.translator_model, app.state.translator_tokenizer)
+        text = translate_if_needed(request.text_to_analyze)
     else:
-        translate = request.text_to_analyze
+        text = request.text_to_analyze
     model = app.state.model
-    cleaned = clean(translate)
+    cleaned = clean(text)
     proba = model.predict_proba([cleaned])[0]
     confidence = round(float(max(proba)), 4)
     label = label_mapping[int(model.predict([cleaned])[0])]
@@ -112,16 +107,13 @@ def predict(request: PredictRequest):
 # PREDICT CHROME
 @app.post("/predict_chrome")
 def predict_chrome(request: ChromeRequest):
-
     import requests as req
     from bs4 import BeautifulSoup
     response_url = req.get(request.url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"})
     soup = BeautifulSoup(response_url.content, "lxml")
     text = " ".join([p.text for p in soup.find_all("p")])
     if is_french(text):
-        if app.state.translator_model is None:
-            app.state.translator_model, app.state.translator_tokenizer = load_translate_model()
-        translated = translate_if_needed(text, app.state.translator_model, app.state.translator_tokenizer)
+        translated = translate_if_needed(text)
     else:
         translated = text
     cleaned = clean(translated)

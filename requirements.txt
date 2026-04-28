@@ -2,16 +2,11 @@ beautifulsoup4
 fastapi
 gspread
 google-auth
-httpx
-joblib
-kaggle
 langchain
 langchain-google-genai
 langchain-community
 langgraph
-langdetect
 lxml
-mlflow
 numpy
 pandas
 plotly
@@ -20,7 +15,6 @@ python-dotenv
 pytest
 requests
 scikit-learn
-sentencepiece
 streamlit
 tavily-python
 torch

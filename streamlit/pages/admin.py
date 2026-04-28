@@ -53,9 +53,8 @@ if sheet is None:
     st.stop()
 
 # ── DONNÉES ─────────────────────────────────────────────────
-rows = sheet.get_all_records()
-df = pd.DataFrame(rows)
 all_rows = sheet.get_all_records()
+df = pd.DataFrame(all_rows)
 
 history = sheet2.get_all_records() if sheet2 else []
 df_history = pd.DataFrame(history)
