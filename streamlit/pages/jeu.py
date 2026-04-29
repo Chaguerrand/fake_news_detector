@@ -75,23 +75,7 @@ if "score_saved" not in st.session_state:
 st.title("🎮 Petit jeu d'Alex le platiste")
 st.divider()
 
-tab_jeu, tab_quizz = st.tabs(["Ajouter une news", "Quizz pour un platiste"])
-
-with tab_jeu:
-    if sheet is None:
-        st.warning("⚠️ Google Sheets non configuré.")
-    else:
-        def add_news(title, content, label):
-            sheet.append_row([title, content, label, "pending"])
-
-        st.subheader("Ajouter une news")
-        title = st.text_input("Titre")
-        content = st.text_area("Contenu")
-        label = st.selectbox("Type", ["fake", "real"])
-        if st.button("Ajouter"):
-            add_news(title, content, label)
-            st.success("Ajouté à Google Sheets ✅")
-            st.rerun()
+tab_quizz, tab_jeu = st.tabs(["Quizz pour un platiste", "Ajouter une news"])
 
 with tab_quizz:
 
@@ -166,6 +150,24 @@ with tab_quizz:
             st.session_state.answered = {}
             st.session_state["score_saved"] = False
             st.rerun()
+
+
+with tab_jeu:
+    if sheet is None:
+        st.warning("⚠️ Google Sheets non configuré.")
+    else:
+        def add_news(title, content, label):
+            sheet.append_row([title, content, label, "pending"])
+
+        st.subheader("Ajouter une news")
+        title = st.text_input("Titre")
+        content = st.text_area("Contenu")
+        label = st.selectbox("Type", ["fake", "real"])
+        if st.button("Ajouter"):
+            add_news(title, content, label)
+            st.success("Ajouté à Google Sheets ✅")
+            st.rerun()
+
 
 # ── LEADERBOARD ───────────────────────────────────────────────
 st.divider()
